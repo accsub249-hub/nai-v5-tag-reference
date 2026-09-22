@@ -390,7 +390,16 @@ footer a{color:var(--ink2)}
 var $ = function(s){ return document.querySelector(s); };
 var lmsg = $('#lmsg'), lbar = $('#lbar i');
 function prog(p, m){ if(m) lmsg.textContent = m; lbar.style.width = (p*100)+'%'; }
-function raf(){ return new Promise(function(r){ requestAnimationFrame(function(){ setTimeout(r,0); }); }); }
+/* 배경 탭에서는 requestAnimationFrame 이 오지 않는다. 그대로 기다리면 색인
+   만들기가 멈춘 채로 있으므로 타이머와 경주시켜 어느 쪽이든 먼저 오면 진행. */
+function raf(){
+  return new Promise(function(r){
+    var done = false;
+    var fin = function(){ if(!done){ done = true; r(); } };
+    requestAnimationFrame(function(){ setTimeout(fin, 0); });
+    setTimeout(fin, 60);
+  });
+}
 
 function b64ToBytes(s){
   var bin = atob(s), n = bin.length, out = new Uint8Array(n);
