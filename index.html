@@ -50,10 +50,7 @@ header{background:var(--card);border-bottom:1px solid var(--line);position:stick
   font-size:19px;line-height:1;display:none;align-items:center;justify-content:center}
 #qclear.on{display:flex}
 #qclear:hover{background:var(--line2);color:var(--ink)}
-.hint{font-size:11.5px;color:var(--ink3);padding:0 0 8px;line-height:1.45;
-  max-height:52px;overflow:hidden;transition:max-height .18s ease,padding .18s ease,opacity .15s ease}
-.hint b{color:var(--ink2);font-weight:600}
-body.scrolled .hint{max-height:0;padding:0;opacity:0}
+.chiprow.sub .chip{font-size:12px;padding:6px 10px;min-height:32px}
 
 /* ---------- chips / filters ---------- */
 .chiprow{display:flex;gap:6px;overflow-x:auto;padding:0 0 9px;scrollbar-width:none;-ms-overflow-style:none}
@@ -193,6 +190,18 @@ details.adv[open]>summary::before{transform:rotate(90deg)}
 .seg button.on{background:var(--accent);color:#fff}
 .relhead .tog{min-height:30px;padding:5px 9px;font-size:11.5px;background:#fff}
 .relhead .cnt{font-size:11px;color:var(--ink3);margin-left:auto;font-variant-numeric:tabular-nums}
+/* 패널 안 분류 고르기 */
+.relfil{display:flex;flex-wrap:wrap;gap:5px;padding:0 0 9px}
+.relfil .rf{
+  --rfc:var(--ink2);
+  border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 10px;min-height:30px;
+  font-size:11.5px;font-weight:600;color:var(--rfc);white-space:nowrap;display:inline-flex;
+  align-items:center;gap:4px;
+}
+.relfil .rf b{font-weight:700;opacity:.55;font-variant-numeric:tabular-nums}
+.relfil .rf:hover{border-color:currentColor}
+.relfil .rf.on{background:var(--rfc);border-color:var(--rfc);color:#fff}
+.relfil .rf.on b{opacity:.8}
 .relgrid{display:grid;grid-template-columns:1fr;gap:5px}
 @media (min-width:620px){ .relgrid{grid-template-columns:1fr 1fr} }
 /* 관련 태그 — 분류별 그룹 보기 */
@@ -309,16 +318,9 @@ footer a{color:var(--ink2)}
         <button id="qclear" aria-label="검색어 지우기">×</button>
       </div>
     </div>
-    <div class="hint">
-      <b>long hair</b> · <b>긴 머리</b> · <b>ㄱㅁ</b> 모두 검색됩니다. 태그를 누르면 NAI 입력 형태로 복사돼요.
-    </div>
     <div class="chiprow" id="cats"></div>
     <div class="chiprow" id="groups" style="display:none"></div>
-    <div class="togs" id="quicktogs">
-      <button class="tog" data-t="new"><span class="bx"></span>V5 신규만</button>
-      <button class="tog" data-t="desc"><span class="bx"></span>설명까지 검색</button>
-      <button class="tog" data-t="kr"><span class="bx"></span>한글명 있는 것만</button>
-    </div>
+    <div class="chiprow" id="subs" style="display:none"></div>
     <details class="adv">
       <summary>주제별 보기 · 게시물 수 · 작품 필터</summary>
       <div class="advgrid">
@@ -547,9 +549,9 @@ function subShort(t){
   return (p.length > 1 ? p[1] : p[0]).trim();
 }
 
+/* cat: null = 전체, 아니면 분류 코드 하나 (단일 선택) */
 var S = {
-  q:'', cats:new Set(), onlyNew:false, desc:false, onlyKr:false,
-  topic:'', work:'', min:0, stat:'', sort:'rel', group:''
+  q:'', cat:null, topic:'', work:'', min:0, stat:'', sort:'rel', group:''
 };
 var results = [];
 var cart = [];
@@ -562,6 +564,8 @@ var relOpts = {
   hide: LS.get('nai5.v2.relhide', true),
   grp:  LS.get('nai5.v2.relgrp', true)       // 기본: 분류별 그룹 보기
 };
+/* 패널 안에서 고른 분류(그룹). null = 전체. 다른 태그를 펼치면 초기화된다. */
+var relFilter = null;
 
 /* ============================ boot ============================ */
 var bootError = null;
@@ -634,6 +638,7 @@ async function buildIndex(){
   var n = D.n, k = D.k, a = D.a, o = D.o, kw = D.kw, d = D.d, p5 = D.p5, p4 = D.p4;
   lname = new Array(N); lalias = new Array(N); lkr = new Array(N);
   lkw = new Array(N); lcho = new Array(N); growth = new Array(N); naiOf = new Array(N);
+  ldesc = new Array(N);
   var exc = D.naiexc || {};
   var CHUNK = 6000;
   for(var i=0;i<N;i++){
@@ -650,9 +655,9 @@ async function buildIndex(){
     lcho[i] = kr ? toCho(kr) : '';
     growth[i] = (p4[i] > 0) ? (p5[i] - p4[i]) / p4[i] : null;
     if(p5[i] > MAXP) MAXP = p5[i];
-    if(i % CHUNK === CHUNK-1){ prog(0.62 + 0.28*(i/N)); await raf(); }
+    ldesc[i] = d[i] ? d[i].toLowerCase() : '';   // 설명 검색은 항상 켜져 있다
+    if(i % CHUNK === CHUNK-1){ prog(0.42 + 0.48*(i/N)); await raf(); }
   }
-  ldesc = d;
 
   // deprecated-tag lookup
   for(var j=0;j<D.dep.length;j++){
@@ -680,9 +685,7 @@ function buildUI(){
   $('#cats').addEventListener('click', function(e){
     var b = e.target.closest('.chip'); if(!b) return;
     var id = +b.dataset.cat;
-    if(S.cats.has(id)) S.cats.delete(id); else S.cats.add(id);
-    b.classList.toggle('on', S.cats.has(id));
-    syncGroupRow();
+    setCat(S.cat === id ? null : id);      // 하나만 선택 (다시 누르면 전체)
     apply();
   });
 
@@ -708,15 +711,11 @@ function buildUI(){
     setGroup(b.dataset.g === '' ? '' : +b.dataset.g);
     apply();
   });
-
-  // quick toggles
-  $('#quicktogs').addEventListener('click', function(e){
-    var b = e.target.closest('.tog'); if(!b) return;
-    var t = b.dataset.t;
-    if(t==='new') S.onlyNew = !S.onlyNew;
-    if(t==='desc') S.desc = !S.desc;
-    if(t==='kr') S.onlyKr = !S.onlyKr;
-    b.classList.toggle('on', t==='new'?S.onlyNew : t==='desc'?S.desc : S.onlyKr);
+  $('#subs').addEventListener('click', function(e){
+    var b = e.target.closest('.schip'); if(!b) return;
+    S.topic = b.dataset.s;
+    $('#fTopic').value = S.topic;
+    paintSubChips();
     apply();
   });
 
@@ -798,14 +797,29 @@ function buildUI(){
   syncGroupRow();
 }
 
-/* ---------- 세부 분류 필터 상태 ---------- */
+/* ---------- 분류 필터 상태 (대분류는 단일 선택) ---------- */
+function paintCatChips(){
+  var bs = $('#cats').querySelectorAll('.chip');
+  for(var i=0;i<bs.length;i++) bs[i].classList.toggle('on', +bs[i].dataset.cat === S.cat);
+}
+function setCat(id){
+  S.cat = id;
+  paintCatChips();
+  syncGroupRow();
+}
 function syncGroupRow(){
-  // 일반 태그를 보고 있을 때만 그룹 칩 줄을 띄운다
-  var show = S.cats.size === 0 ? false : S.cats.has(0);
-  var row = $('#groups');
-  row.style.display = show ? 'flex' : 'none';
-  if(!show && (S.group !== '' || S.topic !== '')){
-    S.group = ''; S.topic = ''; $('#fTopic').value = ''; paintGroupChips();
+  // 일반 태그를 보고 있을 때만 세부 분류 칩을 띄운다
+  var show = S.cat === 0;
+  $('#groups').style.display = show ? 'flex' : 'none';
+  if(!show){
+    if(S.group !== '' || S.topic !== ''){
+      S.group = ''; S.topic = ''; $('#fTopic').value = '';
+    }
+    $('#subs').style.display = 'none';
+    paintGroupChips();
+  } else {
+    paintGroupChips();
+    syncSubRow();
   }
 }
 function paintGroupChips(){
@@ -815,21 +829,41 @@ function paintGroupChips(){
     bs[i].classList.toggle('on', (v === '' ? '' : +v) === S.group);
   }
 }
+/* 그룹을 고르면 그 그룹의 세부 분류 칩 줄이 아래에 펼쳐진다 */
+function syncSubRow(){
+  var row = $('#subs');
+  if(S.cat !== 0 || S.group === ''){ row.style.display = 'none'; return; }
+  var gi = +S.group;
+  var subs = [];
+  for(var t=0;t<D.topics.length;t++) if(D.gof[t] === gi) subs.push(t);
+  if(gi < 0 || !subs.length){ row.style.display = 'none'; return; }
+  subs.sort(function(a,b){ return subShort(a) < subShort(b) ? -1 : 1; });
+  var h = '<button class="chip schip" data-s="">' + esc(D.groups[gi]) + ' 전체</button>';
+  for(var i=0;i<subs.length;i++)
+    h += '<button class="chip schip" data-s="' + subs[i] + '">' + esc(subShort(subs[i])) + '</button>';
+  row.innerHTML = h;
+  row.className = 'chiprow sub';
+  row.style.display = 'flex';
+  paintSubChips();
+}
+function paintSubChips(){
+  var bs = $('#subs').querySelectorAll('.schip');
+  for(var i=0;i<bs.length;i++) bs[i].classList.toggle('on', bs[i].dataset.s === S.topic);
+}
 function setGroup(g){
   S.group = g;
   S.topic = ''; $('#fTopic').value = '';
   paintGroupChips();
+  syncSubRow();
 }
-/* 행의 분류 배지를 눌렀을 때: 일반 카테고리를 켜고 그 세부 분류로 좁힌다 */
+/* 행의 분류 배지를 눌렀을 때: 일반 분류로 바꾸고 그 세부 분류로 좁힌다 */
 function focusTopic(ti){
-  if(!S.cats.has(0)){
-    S.cats = new Set([0]);
-    var cb = $('#cats').querySelectorAll('.chip');
-    for(var i=0;i<cb.length;i++) cb[i].classList.toggle('on', +cb[i].dataset.cat === 0);
-  }
-  syncGroupRow();
-  S.group = ''; paintGroupChips();
+  setCat(0);
+  S.group = String(D.gof[ti]);
+  paintGroupChips();
+  syncSubRow();
   S.topic = String(ti); $('#fTopic').value = String(ti);
+  paintSubChips();
   apply();
   window.scrollTo({ top:0, behavior:'smooth' });
 }
@@ -854,17 +888,8 @@ function scoreOf(i, q, qn, cho){
   }
   if(s === 0 && lalias[i] && lalias[i].indexOf(qn) >= 0) s = 34;
   if(s === 0 && lkw[i] && lkw[i].indexOf(q) >= 0) s = 30;
-  if(s === 0 && S.desc && ldesc[i] && ldesc[i].indexOf(q) >= 0) s = 12;
+  if(s === 0 && ldesc[i] && ldesc[i].indexOf(q) >= 0) s = 12;   // 설명은 항상 검색 대상
   return s > 0 ? s : -1;
-}
-
-/* descriptions are lowercased lazily — only needed by the "설명까지 검색" toggle */
-var descLowered = false;
-function ensureDescLower(){
-  if(descLowered) return;
-  descLowered = true;
-  ldesc = new Array(N);
-  for(var i=0;i<N;i++){ var d = D.d[i]; ldesc[i] = d ? d.toLowerCase() : ''; }
 }
 
 function apply(){
@@ -873,12 +898,10 @@ function apply(){
   if(cho) q = S.q.replace(/\s+/g,'');
   var qn = q.replace(/_/g,' ');
   var searching = q.length > 0;
-  if(S.desc && searching) ensureDescLower();
-  var useCats = S.cats.size > 0;
   // NAI-only entries have no post counts, so they only surface when explicitly asked for
   // (the NAI전용 chip) or when they actually match the search.
-  var wantNai  = useCats ? S.cats.has(9) : searching;
-  var wantReal = !useCats || S.cats.has(0) || S.cats.has(1) || S.cats.has(3) || S.cats.has(4) || S.cats.has(5);
+  var wantNai  = S.cat === null ? searching : S.cat === 9;
+  var wantReal = S.cat === null || S.cat !== 9;
   var topic = S.topic === '' ? -2 : +S.topic;
   var work  = S.work === ''  ? -2 : +S.work;
   var stat  = S.stat === ''  ? -2 : +S.stat;
@@ -886,7 +909,7 @@ function apply(){
   var nai = [], real = [], scores = null, i, k;
 
   // NAI-only pseudo entries (no post counts, so numeric/topic filters exclude them)
-  if(wantNai && topic === -2 && work === -2 && stat === -2 && grp === -2 && !S.onlyNew && !S.min && !S.onlyKr){
+  if(wantNai && topic === -2 && work === -2 && stat === -2 && grp === -2 && !S.min){
     for(k=0;k<D.nai.length;k++){
       var e = D.nai[k], hit = !searching;
       if(!hit){
@@ -901,9 +924,8 @@ function apply(){
     scores = searching ? new Float32Array(N) : null;
     var c = D.c, p5f = D.p5, s_ = D.s, t_ = D.t, w_ = D.w, kk = D.k;
     for(i=0;i<N;i++){
-      if(useCats && !S.cats.has(c[i])) continue;
+      if(S.cat !== null && c[i] !== S.cat) continue;
       if(S.min && p5f[i] < S.min) continue;
-      if(S.onlyNew && s_[i] !== 1) continue;
       if(stat !== -2 && s_[i] !== stat) continue;
       if(topic !== -2 && t_[i] !== topic) continue;
       if(grp !== -2){
@@ -912,7 +934,6 @@ function apply(){
         if(gi_ !== grp) continue;
       }
       if(work !== -2 && w_[i] !== work) continue;
-      if(S.onlyKr && !kk[i]) continue;
       if(searching){
         var sc = scoreOf(i, q, qn, cho);
         if(sc < 0) continue;
@@ -1021,6 +1042,20 @@ function offsetOf(pos){
   if(expanded >= 0 && expandedPos >= 0 && pos > expandedPos) off += expandedH;
   return off;
 }
+/* offsetOf 의 역함수. 펼쳐진 패널 높이만큼 아래 행들이 밀려 있으므로,
+   화면 위치 -> 행 번호 변환도 같은 보정을 해야 한다.
+   (이걸 빼먹으면 패널을 펼친 채 스크롤할 때 그리는 행 번호와 실제 위치가
+    expandedH 만큼 어긋나서 화면이 비어 보인다) */
+function posAtOffset(y){
+  var u = unitH();
+  if(expanded >= 0 && expandedPos >= 0 && expandedH > 0){
+    var expTop = expandedPos * u;
+    if(y < expTop) return Math.floor(y / u);
+    if(y < expTop + u + expandedH) return expandedPos;
+    return Math.floor((y - expandedH) / u);
+  }
+  return Math.floor(y / u);
+}
 function totalH(){
   var h = results.length * unitH();
   if(expanded >= 0 && expandedPos >= 0) h += expandedH;
@@ -1053,11 +1088,8 @@ function renderWindow(){
   var vpTop = viewportEl.getBoundingClientRect().top + window.scrollY;
   var top = Math.max(0, window.scrollY - vpTop);
   var bottom = top + window.innerHeight;
-  var u = unitH();
-  var first = Math.max(0, Math.floor(top / u) - 4);
-  var last  = Math.min(results.length - 1, Math.ceil(bottom / u) + 4);
-  if(expanded >= 0 && expandedPos >= 0 && expandedPos <= last)
-    last = Math.min(results.length - 1, last + Math.ceil(expandedH / u) + 2);
+  var first = Math.max(0, posAtOffset(top) - 4);
+  var last  = Math.min(results.length - 1, posAtOffset(bottom) + 4);
   if(first === lastRange[0] && last === lastRange[1]) return;
   lastRange = [first, last];
 
@@ -1071,18 +1103,27 @@ function renderWindow(){
     el.style.transform = 'translateY(' + offsetOf(p) + 'px)';
   }
 }
-var scrollPending = false, hintHidden = false;
+var scrollPending = false;
 function onScroll(){
   if(scrollPending) return;
   scrollPending = true;
-  requestAnimationFrame(function(){
+  var run = function(){
+    if(!scrollPending) return;          // 이미 처리됨
     scrollPending = false;
-    var y = window.scrollY;
-    if(!hintHidden && y > 60){ hintHidden = true; document.body.classList.add('scrolled'); }
-    else if(hintHidden && y < 12){ hintHidden = false; document.body.classList.remove('scrolled'); }
     if(results.length) renderWindow();
-  });
+  };
+  requestAnimationFrame(run);
+  // 배경 탭에서는 requestAnimationFrame 이 오지 않아 scrollPending 이 영영
+  // 풀리지 않는다. 그러면 탭을 다시 봐도 목록이 갱신되지 않으므로 보험을 둔다.
+  setTimeout(run, 300);
 }
+document.addEventListener('visibilitychange', function(){
+  if(!document.hidden){
+    scrollPending = false;
+    lastRange = [-1, -1];
+    if(results.length) renderWindow();
+  }
+});
 
 var MAXP = 1;
 function barPct(p){
@@ -1200,6 +1241,34 @@ function relPanelHTML(i){
     ? function(a,b){ return b[2]-a[2]; }
     : function(a,b){ return b[1]-a[1]; });
   h += '<span class="cnt">' + items.length + '개</span></div>';
+
+  // 분류별로 골라 보기 — 관련 태그가 많을 때 스크롤 대신 좁혀서 본다
+  var gcount = {}, gorder = [];
+  for(var gi0=0; gi0<items.length; gi0++){
+    var mi0 = relIdxOf[items[gi0][0]];
+    var g0 = (mi0 >= 0 && D.c[mi0] === 0) ? groupOf(mi0) : -1;
+    if(gcount[g0] === undefined){ gcount[g0] = 0; gorder.push(g0); }
+    gcount[g0]++;
+  }
+  if(gorder.length > 1){
+    h += '<div class="relfil"><button class="rf' + (relFilter === null ? ' on' : '') +
+         '" data-rf="">전체 ' + items.length + '</button>';
+    for(var go=0; go<gorder.length; go++){
+      var g1 = gorder[go];
+      var nm1 = g1 >= 0 ? D.groups[g1] : '미분류';
+      h += '<button class="rf' + (relFilter === g1 ? ' on' : '') + '" data-rf="' + g1 + '"' +
+           (g1 >= 0 ? ' style="--rfc:' + gcolor(g1) + '"' : '') + '>' +
+           esc(nm1) + ' <b>' + gcount[g1] + '</b></button>';
+    }
+    h += '</div>';
+  }
+  if(relFilter !== null){
+    items = items.filter(function(it){
+      var mi1 = relIdxOf[it[0]];
+      var g2 = (mi1 >= 0 && D.c[mi1] === 0) ? groupOf(mi1) : -1;
+      return g2 === relFilter;
+    });
+  }
   if(!items.length){
     h += '<div class="relempty">흔한 태그를 빼고 나니 남는 관련 태그가 없습니다.<br>' +
          '<button class="act" data-rh="1" style="margin-top:8px">흔한 태그도 보기</button></div></div>';
@@ -1316,6 +1385,8 @@ function onRowClick(e){
   var tx = e.target.closest('[data-tx]');
   if(tx){ focusTopic(+tx.dataset.tx); return; }
 
+  var rf = e.target.closest('[data-rf]');
+  if(rf){ relFilter = rf.dataset.rf === '' ? null : +rf.dataset.rf; reopenPanel(); return; }
   var rs = e.target.closest('[data-rs]');
   if(rs){ relOpts.sort = rs.dataset.rs; LS.set('nai5.v2.relsort', relOpts.sort); reopenPanel(); return; }
   var rv = e.target.closest('[data-rv]');
@@ -1358,7 +1429,7 @@ function onRowClick(e){
         }
         expandedH = 0;
       }
-      expanded = id; expandedPos = pos;
+      expanded = id; expandedPos = pos; relFilter = null;
       row.classList.add('exp'); act.classList.add('on');
       row.insertAdjacentHTML('beforeend', relPanelHTML(id));
       measureExpanded(row);
@@ -1419,12 +1490,12 @@ window.__NAI5 = {
   setQuery: function(v){ $('#q').value = v; S.q = v; apply(); return results.length; },
   apply: apply, naiOf: function(i){ return naiOf[i]; }, scoreOf: scoreOf,
   groupOf: groupOf, subShort: subShort, relOpts: relOpts,
-  setCats: function(arr){
-    S.cats = new Set(arr);
-    var cb = $('#cats').querySelectorAll('.chip');
-    for(var i=0;i<cb.length;i++) cb[i].classList.toggle('on', S.cats.has(+cb[i].dataset.cat));
-    syncGroupRow(); apply();
-  },
+  setCat: function(id){ setCat(id); apply(); return results.length; },
+  get relFilter(){ return relFilter; },
+  posAtOffset: function(y){ return posAtOffset(y); },
+  offsetOf: function(p){ return offsetOf(p); },
+  get expandedH(){ return expandedH; },
+  get expandedPos(){ return expandedPos; },
   setGroup: function(g){ setGroup(g); apply(); return results.length; },
   setTopic: function(t){ S.topic = t === '' ? '' : String(t); $('#fTopic').value = S.topic; apply(); return results.length; },
   toCho: toCho, isChoQuery: isChoQuery,
