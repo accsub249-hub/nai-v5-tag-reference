@@ -1188,7 +1188,7 @@ function syncSelects(){
   var gOK = S.cat === 0;
   var gSel = gOK && S.group !== '';
   setTabFace(tg, '중분류',
-    !gOK ? '일반 전용' : (S.group === '' ? '전체' : (+S.group < 0 ? '미분류' : D.groups[+S.group])),
+    !gOK ? '일반만' : (S.group === '' ? '전체' : (+S.group < 0 ? '미분류' : D.groups[+S.group])),
     gSel ? fmt(groupCount[+S.group] || 0) : (gOK ? fmt(catCount[0] || 0) : ''),
     gSel, !gOK);
 
@@ -1196,7 +1196,7 @@ function syncSelects(){
   var sOK = gOK && S.group !== '' && +S.group >= 0 && subsOfGroup(+S.group).length > 0;
   var sSel = sOK && S.topic !== '';
   setTabFace(ts, '소분류',
-    !sOK ? '중분류 먼저' : (S.topic === '' ? '전체' : subShort(+S.topic)),
+    !sOK ? '선택 전' : (S.topic === '' ? '전체' : subShort(+S.topic)),
     sSel ? fmt(topicCount[+S.topic] || 0) : '',
     sSel, !sOK);
 
