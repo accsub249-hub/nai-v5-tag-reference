@@ -256,9 +256,8 @@ button{cursor:pointer;background:none;border:none;padding:0}
   :root{--pad-x:22px;--pad-y:18px;--measure:720px}   /* 설명은 읽기 좋은 길이에서 끊는다 */
   .tbin{flex-wrap:nowrap;padding:9px 20px;gap:10px}
   .brand{font-size:17px}
-  .sbox{flex:1 1 210px;min-width:170px;max-width:340px}
-  .fwrap{flex:2 1 460px;min-width:330px}
-  #sort{flex:0 0 auto;width:132px}
+  .sbox{flex:1 1 240px;min-width:190px;max-width:380px}
+  .fwrap{flex:2 1 480px;min-width:340px}
   .shell{max-width:1420px;margin:0 auto;padding:0 20px}
   .listcol{max-width:920px;margin:0 auto;min-width:0}
   footer{margin-top:18px;padding:12px 0 0;border-top:1px solid var(--line2)}
@@ -316,8 +315,10 @@ button{cursor:pointer;background:none;border:none;padding:0}
 .seg button.on:hover{background:var(--accent)}
 
 /* ---------- status ---------- */
-#sortslot{display:contents}
-@media (max-width:899px){ .statusbar #sort{width:auto;min-width:132px;max-width:56%;min-height:var(--ctl-h-sm);font-size:var(--ctl-fs-sm)} }
+/* 정렬은 목록 바로 위 한 줄에 — 카드 밖 배경 위에 놓인다 */
+.statusbar #sort{flex:0 0 auto;width:auto;min-width:126px;max-width:52%;
+  min-height:var(--ctl-h-sm);font-size:var(--ctl-fs-sm);padding:0 26px 0 var(--ctl-px-sm);
+  background-position:right 8px center;order:1}
 .statusbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
   padding:10px var(--pad-x) 9px;flex-wrap:wrap}
 .count{font-size:12px;color:var(--ink3);font-variant-numeric:tabular-nums;margin-left:auto;order:2}
@@ -570,7 +571,6 @@ footer a:hover{color:var(--ink2)}
       </div>
       <div class="fpanel" id="fpanel" hidden></div>
     </div>
-    <select id="sort" aria-label="정렬"></select>
   </div>
 </header>
 
@@ -581,7 +581,7 @@ footer a:hover{color:var(--ink2)}
   <p class="cathelp" id="cathelp"></p>
   <div class="statusbar">
     <span class="sortlab"><svg viewBox="0 0 24 24"><path d="M7 4v16M7 20l-3-3M7 4l3 3M17 20V4M17 4l3 3M17 20l-3-3"/></svg>정렬</span>
-    <span id="sortslot"></span>
+    <select id="sort" aria-label="정렬"></select>
     <div class="count" id="count">—</div>
   </div>
   <div id="notice" class="noticewrap"></div>
@@ -1107,9 +1107,7 @@ function buildUI(){
     measureCPL(); layout(true);
   });
   measureCPL();
-  placeSort();
   measureTopbar();
-  if(wideMQ && wideMQ.addEventListener) wideMQ.addEventListener('change', placeSort);
   window.addEventListener('resize', measureTopbar, {passive:true});
 }
 /* 옆칸(관련 태그)이 상단 바 아래에 붙도록 바 높이를 CSS 변수로 넘긴다 */
@@ -1124,18 +1122,6 @@ function topbarH(){
   if(!tb) return 0;
   var cs = window.getComputedStyle(tb);
   return cs.position === 'sticky' ? Math.round(tb.getBoundingClientRect().height) : 0;
-}
-
-/* 좁은 화면에서는 정렬을 상태줄로 내려 고정 바 높이를 아낀다.
-   (네 줄로 접히면 375px 기준 249px = 화면의 34% 였다) */
-var wideMQ = window.matchMedia ? window.matchMedia('(min-width:900px)') : null;
-function placeSort(){
-  var el = $('#sort'), bar = document.querySelector('#topbar .tbin'), slot = $('#sortslot');
-  if(!el || !bar || !slot) return;
-  var wide = wideMQ ? wideMQ.matches : window.innerWidth >= 900;
-  var want = wide ? bar : slot;
-  if(el.parentNode !== want) want.appendChild(el);
-  measureTopbar();
 }
 
 /* ---------- 성인 태그 토글 ---------- */
