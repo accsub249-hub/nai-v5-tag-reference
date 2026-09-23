@@ -144,7 +144,7 @@ button{cursor:pointer;background:none;border:none;padding:0}
 /* ===== 분류 탭 3개 + 펼침 목록 =====
    드롭다운 3단이 세로로 쌓이던 걸 가로 한 줄로 바꿨다. 탭마다 아이콘·현재 선택·
    개수를 같이 보여 주고, 누르면 화면을 덮지 않고 바로 아래로 목록이 열린다. */
-.fwrap{position:relative;padding:0 0 9px}
+.fwrap{position:relative}
 .ftabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
 .ftab{
   min-height:52px;display:flex;align-items:center;gap:6px;text-align:left;
@@ -173,8 +173,9 @@ button{cursor:pointer;background:none;border:none;padding:0}
 .ftab[aria-expanded="true"]{box-shadow:0 0 0 2px rgba(58,124,225,.28)}
 
 .fpanel{
-  margin-top:7px;background:var(--card);border:1px solid var(--line);border-radius:var(--ctl-r);
-  box-shadow:0 6px 20px rgba(16,26,40,.13);overflow:hidden;
+  position:absolute;left:0;right:0;top:100%;margin-top:7px;z-index:60;
+  background:var(--card);border:1px solid var(--line);border-radius:var(--ctl-r);
+  box-shadow:0 8px 24px rgba(16,26,40,.16);overflow:hidden;
 }
 .fpanel[hidden]{display:none}
 .fphead{display:flex;align-items:center;gap:7px;padding:9px 11px 8px;border-bottom:1px solid var(--line2);
@@ -213,8 +214,6 @@ button{cursor:pointer;background:none;border:none;padding:0}
 /* 상단 바 안에서는 탭 3개가 가로로 들어간다 — 좁은 화면과 같은 모양 */
 @media (min-width:900px){
   .ftab{min-height:44px}
-  .fpanel{position:absolute;left:0;right:0;top:100%;margin-top:7px;z-index:60}
-  .fwrap{padding-bottom:0}
 }
 /* 좁은 화면: 바가 세 줄로 접힌다. 높이를 아끼려고 브랜드 줄을 낮게 잡는다. */
 @media (max-width:899px){
