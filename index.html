@@ -110,7 +110,7 @@ button{cursor:pointer;background:none;border:none;padding:0}
 
 /* ===== 큰 컨트롤: 검색창 · 분류 드롭다운 3단 · 정렬 =====
    높이·테두리·모서리·글자크기·여백을 모두 토큰으로 공유한다. */
-#q, .selrow select, .sortwrap select{
+#q, .sortwrap select{
   height:var(--ctl-h);
   border:1px solid var(--ctl-bd);
   border-radius:var(--ctl-r);
@@ -121,28 +121,100 @@ button{cursor:pointer;background:none;border:none;padding:0}
   width:100%;min-width:0;outline:none;
   font-family:inherit;line-height:1.2;
 }
-#q:hover, .selrow select:hover, .sortwrap select:hover{border-color:var(--ctl-bd-hover)}
-#q:focus, .selrow select:focus, .sortwrap select:focus{
+#q:hover, .sortwrap select:hover{border-color:var(--ctl-bd-hover)}
+#q:focus, .sortwrap select:focus{
   border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px var(--accent-weak);
 }
 /* 드롭다운: 화살표를 직접 그려 세 개 모두 같은 모양으로 */
-.selrow select, .sortwrap select{
+.sortwrap select{
   appearance:none;-webkit-appearance:none;cursor:pointer;
   padding-right:30px;
   background-image:url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%238a94a3' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat:no-repeat;background-position:right 11px center;
 }
-.selrow select:disabled{background-color:#f2f4f7;color:var(--ink3);cursor:default;opacity:1}
-.selrow select.on, .sortwrap select.on{
+.sortwrap select.on{
   border-color:#b9d0ff;background-color:var(--accent-weak);color:var(--accent-ink);font-weight:600;
 }
-.selrow{display:grid;grid-template-columns:1fr;gap:6px;padding:0 0 8px}
-@media (min-width:620px) and (max-width:899px){ .selrow{grid-template-columns:1fr 1fr 1fr} }
 .cathelp{font-size:11.5px;line-height:1.55;color:var(--ink3);margin:0;padding:0 0 9px;display:none}
 .cathelp.on{display:block}
 
+/* ===== 분류 탭 3개 + 펼침 목록 =====
+   드롭다운 3단이 세로로 쌓이던 걸 가로 한 줄로 바꿨다. 탭마다 아이콘·현재 선택·
+   개수를 같이 보여 주고, 누르면 화면을 덮지 않고 바로 아래로 목록이 열린다. */
+.fwrap{position:relative;padding:0 0 9px}
+.ftabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.ftab{
+  min-height:52px;display:flex;align-items:center;gap:6px;text-align:left;
+  padding:0 8px 0 9px;border:1px solid var(--ctl-bd);border-radius:var(--ctl-r);
+  background:var(--ctl-bg);color:var(--ink2);min-width:0;
+}
+.ftab:hover{border-color:var(--ctl-bd-hover)}
+.ftab .fi{flex:0 0 auto;display:flex;width:17px;height:17px;opacity:.65}
+.ftab .fi svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;
+  stroke-linecap:round;stroke-linejoin:round}
+.ftab .ft{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:1px}
+.ftab .ft i{font-style:normal;font-size:9.5px;font-weight:600;opacity:.6;letter-spacing:.2px}
+.ftab .ft b{font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ftab .fn{flex:0 0 auto;font-size:10px;font-weight:600;opacity:.6;font-variant-numeric:tabular-nums}
+.ftab .fc{flex:0 0 auto;display:flex;width:13px;height:13px;opacity:.5;transition:transform .15s}
+.ftab .fc svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.2;
+  stroke-linecap:round;stroke-linejoin:round}
+.ftab[aria-expanded="true"] .fc{transform:rotate(180deg)}
+.ftab[disabled]{opacity:.45;cursor:default}
+.ftab[disabled]:hover{border-color:var(--ctl-bd)}
+/* 값이 골라진 탭 */
+.ftab.sel{background:var(--accent);border-color:var(--accent);color:#fff}
+.ftab.sel .fi,.ftab.sel .fn,.ftab.sel .fc{opacity:.85}
+.ftab.sel .ft i{opacity:.75}
+/* 열려 있는 탭 */
+.ftab[aria-expanded="true"]{box-shadow:0 0 0 2px rgba(58,124,225,.28)}
+
+.fpanel{
+  margin-top:7px;background:var(--card);border:1px solid var(--line);border-radius:var(--ctl-r);
+  box-shadow:0 6px 20px rgba(16,26,40,.13);overflow:hidden;
+}
+.fpanel[hidden]{display:none}
+.fphead{display:flex;align-items:center;gap:7px;padding:9px 11px 8px;border-bottom:1px solid var(--line2);
+  font-size:11.5px;font-weight:700;color:var(--ink2)}
+.fphead .n{margin-left:auto;font-weight:600;color:var(--ink3);font-variant-numeric:tabular-nums;font-size:10.5px}
+.fpclose{width:26px;height:26px;border-radius:7px;color:var(--ink3);font-size:17px;line-height:1;
+  display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.fpclose:hover{background:var(--line2);color:var(--ink)}
+.flist{
+  max-height:min(46vh, 340px);overflow-y:auto;overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;overflow-anchor:none;padding:5px;
+}
+.flist::-webkit-scrollbar{width:8px}
+.flist::-webkit-scrollbar-thumb{background:#ccd6e4;border-radius:4px}
+.flist::-webkit-scrollbar-track{background:transparent}
+.fitem{
+  display:flex;align-items:center;gap:8px;width:100%;text-align:left;
+  min-height:42px;padding:6px 8px;border-radius:8px;font-size:13px;color:var(--ink2);
+}
+.fitem:hover{background:var(--accent-weak)}
+.fitem .ck{flex:0 0 auto;width:15px;height:15px;display:flex;color:var(--accent);opacity:0}
+.fitem .ck svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.6;
+  stroke-linecap:round;stroke-linejoin:round}
+.fitem.on{background:var(--accent-weak);color:var(--accent-ink);font-weight:700}
+.fitem.on .ck{opacity:1}
+.fitem .nm{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fitem .ct{flex:0 0 auto;font-size:11px;color:var(--ink3);font-variant-numeric:tabular-nums}
+.fitem.on .ct{color:var(--accent-ink);opacity:.8}
+.fempty{padding:16px 10px;text-align:center;font-size:12px;color:var(--ink3)}
+
+/* 좁은 화면: 검색창과 성인 토글만 위에 붙여 둔다 (자주 쓰고 높이가 낮다) */
+@media (max-width:899px){
+  .searchrow{position:sticky;top:0;z-index:30;background:var(--card);
+    margin:0 -12px;padding:8px 12px;border-bottom:1px solid var(--line2)}
+  .side{padding-top:0}
+  .hd-top{padding:11px 0 8px}
+}
+
 /* 검색창 */
-.searchrow{display:flex;gap:8px;align-items:center;padding:0 0 8px}
+.searchrow{display:flex;gap:7px;align-items:center;padding:0 0 8px}
+#togslotN{display:contents}
+.searchrow .adtog{margin-left:0;flex:0 0 auto;min-height:var(--ctl-h);padding:0 8px}
+@media (max-width:479px){ .searchrow .adtog .lbl{display:none} }
 .sbox{flex:1;position:relative;display:flex;align-items:center;min-width:0}
 .sbox svg{position:absolute;left:12px;width:16px;height:16px;flex:0 0 auto;
   fill:none;stroke:var(--ink3);stroke-width:2;pointer-events:none}
@@ -264,18 +336,19 @@ button{cursor:pointer;background:none;border:none;padding:0}
 .row.exp{z-index:2}
 .rmain{display:block}
 /* 1행: 한글명 (영문태그 · 게시물수) */
+/* 이름 줄은 이 카드의 제목이다. 장식을 더하지 않고 크기·굵기로만 위계를 세운다. */
 .tline{
-  display:block;width:100%;text-align:left;padding:0;margin:0 0 4px;
-  font-size:15px;line-height:1.4;color:var(--ink);
+  display:block;width:100%;text-align:left;padding:0;margin:0 0 5px;
+  font-size:18px;line-height:1.35;color:var(--ink);
 }
-.tline .kr{font-weight:700}
-.tline .paren{color:var(--ink3);font-weight:400;font-size:13.5px}
+.tline .kr{font-weight:800;letter-spacing:-.2px}
+.tline .paren{color:var(--ink3);font-weight:400;font-size:14px}
 .tline .en{
   font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  font-size:13px;font-weight:600;color:var(--accent-ink);letter-spacing:-.2px;
+  font-size:14.5px;font-weight:700;color:var(--accent-ink);letter-spacing:-.3px;
 }
 .tline:hover .en{text-decoration:underline}
-.tline .num{font-variant-numeric:tabular-nums}
+.tline .num{font-variant-numeric:tabular-nums;font-size:14px;color:var(--ink2);font-weight:600}
 .tline .flag{font-size:10.5px;font-weight:800;color:var(--ok);margin-left:5px;vertical-align:1px}
 .tline .flag.ren{color:var(--warn)}
 /* 2행: 분류 경로 — 전부 같은 스타일, 왼쪽 정렬 */
@@ -288,20 +361,25 @@ button{cursor:pointer;background:none;border:none;padding:0}
 .path .sep{opacity:.5;padding:0 1px}
 /* 설명 전문 */
 /* 설명은 열 오른쪽 끝까지 닿지 않게 — 읽기 좋은 길이에서 끊는다 */
+/* 설명은 옅은 카드로 묶어 이름·분류 줄과 구분한다. 테두리 하나, 배경 하나로 끝낸다. */
+.dcard{
+  background:#f7f9fc;border:1px solid #eaeff6;border-radius:10px;
+  padding:10px 12px;margin:0 0 9px;max-width:var(--measure);
+}
 .desc{
-  font-size:13.5px;line-height:1.75;color:var(--ink2);margin:0 0 7px;
-  max-width:var(--measure);
+  font-size:14px;line-height:1.8;color:var(--ink2);margin:0;
   word-break:keep-all;overflow-wrap:anywhere;
 }
-.kws{font-size:12px;line-height:1.6;color:var(--ink3);margin:0 0 10px;max-width:var(--measure)}
-.kws b{font-weight:600;color:var(--ink3);opacity:.8}
-.nodesc{font-size:12.5px;color:var(--ink3);opacity:.7;margin:0 0 10px}
+.kws{font-size:12px;line-height:1.6;color:var(--ink3);margin:8px 0 0;
+  padding-top:8px;border-top:1px solid #e8edf4}
+.kws b{font-weight:700;color:var(--ink3);opacity:.85}
+.nodesc{font-size:12.5px;color:var(--ink3);opacity:.7;margin:0}
 .r3{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .act.add.in{background:var(--accent);border-color:var(--accent);color:#fff}
 
 /* related panel */
 .relp{border-top:1px solid var(--line2);background:#fafbfd;padding:9px 11px 11px}
-.relhead{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-bottom:8px}
+.relhead{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-bottom:9px}
 .relhead .cnt{font-size:11px;color:var(--ink3);margin-left:auto;font-variant-numeric:tabular-nums;
   display:inline-flex;align-items:center;gap:5px}
 .relhead .cnt .more{font-size:10px;color:var(--accent-ink);background:var(--accent-weak);
@@ -328,8 +406,11 @@ button{cursor:pointer;background:none;border:none;padding:0}
 .rghead .ln{flex:1 1 auto;height:1px;background:var(--line);min-width:8px}
 .ritem{
   display:flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--line);
-  border-radius:9px;padding:6px 7px;min-height:44px;
+  border-radius:9px;padding:6px 8px;min-height:46px;
 }
+/* 어느 분류인지 색 점 하나로 (배지를 늘리지 않는다) */
+.rdot{flex:0 0 auto;width:7px;height:7px;border-radius:50%;background:var(--ink3);opacity:.85}
+.rdot.none{background:#cdd6e2}
 .rtag{flex:1 1 auto;min-width:0;text-align:left;display:flex;flex-direction:column;gap:1px}
 .rtag .rn{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;font-weight:600;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -435,18 +516,38 @@ footer a:hover{color:var(--ink2)}
         <span class="badge">18+</span><span class="lbl">성인 태그</span><span class="sw"></span>
       </button>
     </div>
-    <div class="searchrow">
+    <div class="searchrow" id="searchrow">
       <div class="sbox">
         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
         <input id="q" type="search" autocomplete="off" autocorrect="off" spellcheck="false"
                placeholder="태그 · 한글명 · 초성으로 검색" enterkeyhint="search">
         <button id="qclear" aria-label="검색어 지우기">×</button>
       </div>
+      <span id="togslotN"></span>
     </div>
-    <div class="selrow">
-      <select id="fCat" aria-label="대분류"></select>
-      <select id="fGroup" aria-label="중분류" disabled></select>
-      <select id="fSub" aria-label="소분류" disabled></select>
+    <!-- 대 → 중 → 소 분류: 가로 탭 3개. 누르면 바로 아래로 목록이 펼쳐진다. -->
+    <div class="fwrap">
+      <div class="ftabs" id="ftabs">
+        <button class="ftab" data-tab="cat" aria-expanded="false" aria-controls="fpanel">
+          <span class="fi" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span>
+          <span class="ft"><i>대분류</i><b>전체</b></span>
+          <span class="fn"></span>
+          <span class="fc" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span>
+        </button>
+        <button class="ftab" data-tab="group" aria-expanded="false" aria-controls="fpanel">
+          <span class="fi" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h7v6H4zM13 5h7v6h-7zM4 13h7v6H4zM13 13h7v6h-7z"/></svg></span>
+          <span class="ft"><i>중분류</i><b>전체</b></span>
+          <span class="fn"></span>
+          <span class="fc" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span>
+        </button>
+        <button class="ftab" data-tab="sub" aria-expanded="false" aria-controls="fpanel">
+          <span class="fi" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 7h13M7 12h13M7 17h13M3.5 7h.01M3.5 12h.01M3.5 17h.01"/></svg></span>
+          <span class="ft"><i>소분류</i><b>전체</b></span>
+          <span class="fn"></span>
+          <span class="fc" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></span>
+        </button>
+      </div>
+      <div class="fpanel" id="fpanel" hidden></div>
     </div>
     <p class="cathelp" id="cathelp"></p>
     <div class="sortwrap">
@@ -865,9 +966,9 @@ async function buildIndex(){
 /* ============================ UI construction ============================ */
 /* 분류별 개수 — 성인 태그를 숨기고 있으면 개수도 숨긴 기준으로 센다.
    숨겼는데 개수는 그대로면 어긋나 보인다. 토글을 켜고 끌 때마다 다시 센다. */
-var catCount = {}, visibleN = 0;
+var catCount = {}, topicCount = {}, visibleN = 0;
 function recount(){
-  catCount = {}; groupCount = {}; visibleN = 0;
+  catCount = {}; groupCount = {}; topicCount = {}; visibleN = 0;
   for(var i=0;i<N;i++){
     if(!adultOn && isAdult(i)) continue;
     visibleN++;
@@ -875,24 +976,40 @@ function recount(){
     if(D.c[i] === 0){
       var gg = groupOf(i);
       groupCount[gg] = (groupCount[gg] || 0) + 1;
+      if(D.t[i] >= 0) topicCount[D.t[i]] = (topicCount[D.t[i]] || 0) + 1;
     }
   }
   catCount[9] = D.nai.length;
 }
-function fillCatSelect(){
-  var copts = [['', '전체 분류 (' + fmt(visibleN) + ')']];
-  for(var ci=0; ci<CATS.length; ci++)
-    copts.push([CATS[ci].id, CATS[ci].name + ' (' + fmt(catCount[CATS[ci].id] || 0) + ')']);
-  fillSelect($('#fCat'), copts, S.cat === null ? '' : String(S.cat));
-}
+function fillCatSelect(){ syncSelects(); }        // 탭으로 바뀌어 라벨만 다시 그리면 된다
 function buildUI(){
   recount();
-  fillCatSelect();
-  $('#fCat').addEventListener('change', function(){
-    setCat(this.value === '' ? null : +this.value); apply();
+  $('#ftabs').addEventListener('click', function(e){
+    var b = e.target.closest('.ftab');
+    if(!b || b.disabled) return;
+    if(openTab === b.dataset.tab) closeFPanel();
+    else openFPanel(b.dataset.tab);
   });
-  $('#fGroup').addEventListener('change', function(){ setGroup(this.value); apply(); });
-  $('#fSub').addEventListener('change', function(){ setTopicSel(this.value); apply(); });
+  $('#fpanel').addEventListener('click', function(e){
+    if(e.target.closest('[data-fpclose]')){ closeFPanel(); return; }
+    var it = e.target.closest('[data-fv]');
+    if(!it) return;
+    var v = it.dataset.fv, kind = openTab;
+    closeFPanel();
+    if(kind === 'cat') setCat(v === '' ? null : +v);
+    else if(kind === 'group') setGroup(v);
+    else setTopicSel(v);
+    apply();
+  });
+  /* 바깥을 누르거나 Esc 로 닫힌다 */
+  document.addEventListener('click', function(e){
+    if(!openTab) return;
+    if(e.target.closest('#fpanel') || e.target.closest('#ftabs')) return;
+    closeFPanel();
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && openTab) closeFPanel();
+  });
   syncSelects();
 
   // sort
@@ -979,10 +1096,10 @@ function buildUI(){
    본문 위 상태줄 오른쪽(= 화면 우측 상단)으로 옮겨 둔다. */
 var wideMQ = window.matchMedia ? window.matchMedia('(min-width:900px)') : null;
 function placeAdultToggle(){
-  var t = $('#adTog'), slot = $('#togslot'), head = $('.hd-top');
-  if(!t || !slot || !head) return;
+  var t = $('#adTog'), wideSlot = $('#togslot'), narrowSlot = $('#togslotN');
+  if(!t || !wideSlot || !narrowSlot) return;
   var wide = wideMQ ? wideMQ.matches : window.innerWidth >= 900;
-  var want = wide ? slot : head;
+  var want = wide ? wideSlot : narrowSlot;   // 좁은 화면에선 검색창과 함께 위에 붙어 있는다
   if(t.parentNode !== want) want.appendChild(t);
 }
 function syncAdultToggle(){
@@ -1026,50 +1143,109 @@ var CATHELP = {
   5: '해상도·화질처럼 그림 내용이 아닌 정보를 나타내는 태그입니다.',
   9: '단부루에는 없고 NovelAI에서만 쓰는 태그입니다.'
 };
-function fillSelect(sel, opts, value){
-  var h = '';
-  for(var i=0;i<opts.length;i++)
-    h += '<option value="' + esc(opts[i][0]) + '">' + esc(opts[i][1]) + '</option>';
-  sel.innerHTML = h;
-  sel.value = value == null ? '' : String(value);
+/* ---------- 분류 탭 3개 ---------- */
+var openTab = null;
+function subsOfGroup(gi){
+  var subs = [];
+  for(var t=0;t<D.topics.length;t++) if(D.gof[t] === gi) subs.push(t);
+  subs.sort(function(a,b){ return subShort(a) < subShort(b) ? -1 : 1; });
+  return subs;
 }
+function setTabFace(el, cap, val, n, sel, dis){
+  el.querySelector('.ft i').textContent = cap;
+  el.querySelector('.ft b').textContent = val;
+  el.querySelector('.fn').textContent = n;
+  el.classList.toggle('sel', !!sel);
+  el.disabled = !!dis;
+  if(dis) el.setAttribute('aria-expanded', 'false');
+}
+/* 이름은 그대로 두었다 — 호출부가 여럿이고 하는 일(조작부를 상태에 맞춤)은 같다 */
 function syncSelects(){
-  var cs = $('#fCat'), gs = $('#fGroup'), ss = $('#fSub');
-  cs.value = S.cat === null ? '' : String(S.cat);
-  cs.classList.toggle('on', S.cat !== null);
+  var tc = $('.ftab[data-tab="cat"]'), tg = $('.ftab[data-tab="group"]'), ts = $('.ftab[data-tab="sub"]');
+  if(!tc) return;
+
+  setTabFace(tc, '대분류',
+    S.cat === null ? '전체' : (CATNAME[S.cat] || '전체'),
+    fmt(S.cat === null ? visibleN : (catCount[S.cat] || 0)),
+    S.cat !== null, false);
 
   // 중분류 — 일반 태그에만 있다
-  if(S.cat === 0){
-    var opts = [['', '중분류 전체']];
-    for(var g=0; g<D.groups.length; g++) opts.push([g, D.groups[g] + ' (' + fmt(groupCount[g] || 0) + ')']);
-    if(groupCount[-1]) opts.push([-1, '미분류 (' + fmt(groupCount[-1]) + ')']);
-    fillSelect(gs, opts, S.group);
-    gs.disabled = false;
-  } else {
-    fillSelect(gs, [['', '중분류']], '');
-    gs.disabled = true;
-  }
-  gs.classList.toggle('on', S.group !== '');
+  var gOK = S.cat === 0;
+  var gSel = gOK && S.group !== '';
+  setTabFace(tg, '중분류',
+    !gOK ? '일반 전용' : (S.group === '' ? '전체' : (+S.group < 0 ? '미분류' : D.groups[+S.group])),
+    gSel ? fmt(groupCount[+S.group] || 0) : (gOK ? fmt(catCount[0] || 0) : ''),
+    gSel, !gOK);
 
   // 소분류 — 중분류를 골랐을 때만
-  if(S.cat === 0 && S.group !== '' && +S.group >= 0){
-    var gi = +S.group, subs = [];
-    for(var t=0;t<D.topics.length;t++) if(D.gof[t] === gi) subs.push(t);
-    subs.sort(function(a,b){ return subShort(a) < subShort(b) ? -1 : 1; });
-    var so = [['', '소분류 전체']];
-    for(var i=0;i<subs.length;i++) so.push([subs[i], subShort(subs[i])]);
-    fillSelect(ss, so, S.topic);
-    ss.disabled = subs.length === 0;
-  } else {
-    fillSelect(ss, [['', '소분류']], '');
-    ss.disabled = true;
+  var sOK = gOK && S.group !== '' && +S.group >= 0 && subsOfGroup(+S.group).length > 0;
+  var sSel = sOK && S.topic !== '';
+  setTabFace(ts, '소분류',
+    !sOK ? '중분류 먼저' : (S.topic === '' ? '전체' : subShort(+S.topic)),
+    sSel ? fmt(topicCount[+S.topic] || 0) : '',
+    sSel, !sOK);
+
+  if(openTab){
+    var cur = $('.ftab[data-tab="' + openTab + '"]');
+    if(!cur || cur.disabled) closeFPanel();
   }
-  ss.classList.toggle('on', S.topic !== '');
 
   var help = $('#cathelp');
   var txt = S.cat === null ? '' : (CATHELP[S.cat] || '');
   help.textContent = txt;
   help.classList.toggle('on', !!txt);
+}
+
+var CHECK_SVG = '<span class="ck"><svg viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg></span>';
+function fpanelItems(kind){
+  var out = [];
+  if(kind === 'cat'){
+    out.push({ v:'', nm:'전체 분류', ct:visibleN, on:S.cat === null });
+    for(var i=0;i<CATS.length;i++)
+      out.push({ v:String(CATS[i].id), nm:CATS[i].name, ct:catCount[CATS[i].id] || 0,
+                 on:S.cat === CATS[i].id });
+  } else if(kind === 'group'){
+    out.push({ v:'', nm:'중분류 전체', ct:catCount[0] || 0, on:S.group === '' });
+    for(var g=0; g<D.groups.length; g++)
+      out.push({ v:String(g), nm:D.groups[g], ct:groupCount[g] || 0, on:S.group === String(g) });
+    if(groupCount[-1]) out.push({ v:'-1', nm:'미분류', ct:groupCount[-1], on:S.group === '-1' });
+  } else {
+    var gi = +S.group, subs = subsOfGroup(gi);
+    out.push({ v:'', nm:'소분류 전체', ct:groupCount[gi] || 0, on:S.topic === '' });
+    for(var k=0;k<subs.length;k++)
+      out.push({ v:String(subs[k]), nm:subShort(subs[k]), ct:topicCount[subs[k]] || 0,
+                 on:S.topic === String(subs[k]) });
+  }
+  return out;
+}
+function openFPanel(kind){
+  var el = $('#fpanel'), items = fpanelItems(kind);
+  var title = kind === 'cat' ? '대분류' : (kind === 'group' ? '중분류' : '소분류');
+  var h = '<div class="fphead">' + title + ' 고르기<span class="n">' + items.length + '개</span>' +
+          '<button class="fpclose" data-fpclose="1" aria-label="닫기">×</button></div><div class="flist">';
+  for(var i=0;i<items.length;i++){
+    var it = items[i];
+    h += '<button class="fitem' + (it.on ? ' on' : '') + '" data-fv="' + esc(it.v) + '">' + CHECK_SVG +
+         '<span class="nm">' + esc(it.nm) + '</span>' +
+         (it.ct ? '<span class="ct">' + fmt(it.ct) + '</span>' : '') + '</button>';
+  }
+  h += '</div>';
+  el.innerHTML = h;
+  el.hidden = false;
+  openTab = kind;
+  var tabs = document.querySelectorAll('.ftab');
+  for(var j=0;j<tabs.length;j++)
+    tabs[j].setAttribute('aria-expanded', tabs[j].dataset.tab === kind ? 'true' : 'false');
+  var sel = el.querySelector('.fitem.on');
+  if(sel && sel.scrollIntoView) sel.scrollIntoView({ block:'nearest' });
+}
+function closeFPanel(){
+  var el = $('#fpanel');
+  if(!el) return;
+  el.hidden = true; el.innerHTML = '';
+  openTab = null;
+  var tabs = document.querySelectorAll('.ftab');
+  for(var j=0;j<tabs.length;j++) tabs[j].setAttribute('aria-expanded', 'false');
 }
 function setCat(id){
   if(S.cat !== id){ S.group = ''; S.topic = ''; }   // 상위를 바꾸면 하위는 초기화
@@ -1571,9 +1747,11 @@ function rowHTML(i){
   h += pathHTML(i, cat);
 
   // 설명 전문
+  h += '<div class="dcard">';
   if(D.d[i]) h += '<p class="desc">' + esc(D.d[i]) + '</p>';
   else h += '<p class="nodesc">위키 설명 없음</p>';
   if(D.kw[i]) h += '<div class="kws"><b>키워드</b> ' + esc(D.kw[i]) + '</div>';
+  h += '</div>';
 
   h += '<div class="r3">';
   if(cat === 0) h += '<button class="act relbtn' + (i === expanded ? ' on' : '') + '" data-act="rel"' +
@@ -1614,7 +1792,7 @@ function naiRowHTML(k){
           '<span class="kr">' + esc(e[1]) + '</span> ' +
           '<span class="paren">(<span class="en">' + esc(e[0]) + '</span>)</span></button>';
   h += '<div class="path"><span>NAI전용</span><span class="sep">\u203a</span><span>' + esc(e[2]) + '</span></div>';
-  h += '<p class="nodesc">단부루에는 없고 NovelAI에서만 쓰는 태그라 게시물 수와 위키가 없습니다.</p>';
+  h += '<div class="dcard"><p class="nodesc">단부루에는 없고 NovelAI에서만 쓰는 태그라 게시물 수와 위키가 없습니다.</p></div>';
   return h;
 }
 
@@ -1622,10 +1800,13 @@ function naiRowHTML(k){
 function relPanelHTML(i){
   var flat = R.r[String(i)];
   var h = '<div class="relp">';
+  /* 정렬과 보기 방식을 세그먼트 두 벌로 묶었다. 그 아래에 분류 칩이 온다. */
   h += '<div class="relhead">';
-  h += '<span class="seg"><button data-rs="cos"' + (relOpts.sort==='cos'?' class="on"':'') + '>연관도순</button>' +
+  h += '<span class="seg" role="group" aria-label="정렬">' +
+       '<button data-rs="cos"' + (relOpts.sort==='cos'?' class="on"':'') + '>연관도순</button>' +
        '<button data-rs="freq"' + (relOpts.sort==='freq'?' class="on"':'') + '>빈도순</button></span>';
-  h += '<span class="seg"><button data-rv="1"' + (relOpts.grp?' class="on"':'') + '>분류별</button>' +
+  h += '<span class="seg" role="group" aria-label="보기">' +
+       '<button data-rv="1"' + (relOpts.grp?' class="on"':'') + '>분류별</button>' +
        '<button data-rv="0"' + (!relOpts.grp?' class="on"':'') + '>전체</button></span>';
   h += '<button class="tog' + (relOpts.hide?' on':'') + '" data-rh="1"><span class="bx"></span>흔한 태그 숨기기</button>';
   if(!flat){
@@ -1707,7 +1888,10 @@ function relItemsHTML(items){
     var pct = (val/10).toFixed(val >= 100 ? 0 : 1) + '%';
     var tip = '빈도 ' + (fr/10).toFixed(1) + '% · 연관도 ' + (co/10).toFixed(1) + '%' +
               (pc >= 0 ? ' · 게시물 ' + fmt(pc) + '개' : '');
+    var gdot = (mi >= 0 && D.c[mi] === 0) ? groupOf(mi) : -1;
     h += '<div class="ritem" title="' + esc(tip) + '">' +
+         '<span class="rdot" aria-hidden="true"' +
+         (gdot >= 0 ? ' style="background:' + gcolor(gdot) + '"' : ' class="rdot none"') + '></span>' +
          '<button class="rtag" data-rcopy="' + esc(nai) + '"><span class="rn">' + esc(nm) + '</span>' +
          '<span class="rk">' + (kr ? esc(kr) : (mi < 0 ? '목록 밖 태그' : '한글명 없음')) + '</span></button>' +
          '<span class="rstat"><span class="rpct">' + pct + '</span>' +
