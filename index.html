@@ -221,7 +221,7 @@ button{cursor:pointer;background:none;border:none;padding:0}
      정렬은 상태줄로 내려보낸다 (자주 쓰지 않고, 바로 아래에 그대로 있다). */
   .tbin{padding:7px 12px 8px;gap:7px}
   .brand{flex:0 0 auto;font-size:14px;order:1}
-  .sbox{flex:1 1 130px;min-width:110px;order:2}
+  .sbox{flex:1 1 90px;min-width:90px;order:2}
   .adtog{order:3;padding:0 7px}
   .fwrap{order:4;flex:1 1 100%}
   .ftab{min-height:46px}
@@ -232,7 +232,7 @@ button{cursor:pointer;background:none;border:none;padding:0}
 .sbox{flex:1 1 auto;position:relative;display:flex;align-items:center;min-width:0}
 .sbox svg{position:absolute;left:12px;width:16px;height:16px;flex:0 0 auto;
   fill:none;stroke:var(--ink3);stroke-width:2;pointer-events:none}
-#q{padding-left:34px;padding-right:38px}
+#q{padding-left:34px;padding-right:38px;min-width:0}   /* flex 안에서 줄어들 수 있게 */
 @media (max-width:899px){ #q{font-size:16px} }   /* iOS 확대 방지 */
 #qclear{position:absolute;right:5px;width:30px;height:30px;border-radius:var(--ctl-r-sm);
   color:var(--ink3);font-size:18px;line-height:1;display:none;align-items:center;justify-content:center}
