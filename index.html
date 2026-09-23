@@ -534,7 +534,10 @@ function mb(n){ return (n/1048576).toFixed(1); }
 
 /* 내려받기 (깃허브 페이지 모드). 상대 경로라 저장소 하위 폴더에서도 동작한다. */
 async function fetchGz(url, onProgress){
-  var res = await fetch(url, {cache:'force-cache'});
+  /* force-cache 를 쓰면 안 된다. 한 번 404 를 받아 두면 그 404 를 계속 돌려주고,
+     데이터 파일을 새로 올려도 이름이 같으면 옛 내용을 계속 쓴다.
+     기본 캐시 정책이면 ETag 로 확인하고 바뀐 것만 다시 받는다. */
+  var res = await fetch(url);
   if(!res.ok) throw new Error(url + ' — HTTP ' + res.status);
   var total = +(res.headers.get('content-length') || 0);
   if(!res.body){                                   // 스트림 미지원 브라우저
@@ -796,9 +799,24 @@ async function loadStage2(){
       rel2Done++;
       onStage2Chunk();
     }catch(err){
-      rel2Failed = true;                // 남은 조각은 포기하고 있는 만큼으로 계속
-      refreshOpenPanel();
-      return;
+      /* 한 번은 다시 시도한다. 그래도 안 되면 있는 만큼(상위 60개)으로 계속 쓴다. */
+      try{
+        await new Promise(function(r){ setTimeout(r, 1200); });
+        var again = await loadPayload('D3_' + i, 'data/' + REL2[i]);
+        var r2 = again.r;
+        for(var k2 in r2){
+          if(!Object.prototype.hasOwnProperty.call(r2, k2)) continue;
+          var c2 = R.r[k2];
+          R.r[k2] = c2 ? c2.concat(r2[k2]) : r2[k2];
+        }
+        rel2Done++;
+        onStage2Chunk();
+        continue;
+      }catch(err2){
+        rel2Failed = true;
+        refreshOpenPanel();
+        return;
+      }
     }
   }
 }
