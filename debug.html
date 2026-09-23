@@ -2135,17 +2135,23 @@ function report(){
   marks.forEach(function(m, idx){
     L.push('');
     L.push('---- 튐 #' + (idx + 1) + '  t=' + m.t + 'ms  scrollY=' + m.y + ' ----');
-    var from = m.t - 2500, to = m.t + 400;
+    /* 버튼을 조금 늦게 눌러도 잡히도록 앞으로 5초까지 본다 */
+    var from = m.t - 5000, to = m.t + 800;
     var s = samp.filter(function(x){ return x.t >= from && x.t <= to; });
     var e = ev.filter(function(x){ return x.t >= from && x.t <= to; });
+    if(!s.length) s = samp.slice(-80);
+    if(!e.length) e = ev.slice(-40);
     L.push('[이벤트]');
-    e.slice(-45).forEach(function(x){ L.push('  ' + JSON.stringify(x)); });
+    e.slice(-60).forEach(function(x){ L.push('  ' + JSON.stringify(x)); });
     L.push('[스크롤 표본 t,y,Δ,ih,vh]');
-    var step = Math.max(1, Math.ceil(s.length / 70));
+    var step = Math.max(1, Math.ceil(s.length / 90));
     for(var i = 0; i < s.length; i += step){
       var x = s[i];
       L.push('  ' + x.t + ',' + x.y + ',' + x.d + ',' + x.ih + ',' + x.vh);
     }
+    /* 이 구간에서 가장 큰 한 프레임 이동 — 튐의 크기 */
+    var big = s.reduce(function(a, x){ return Math.abs(x.d) > Math.abs(a.d || 0) ? x : a; }, {});
+    if(big.t !== undefined) L.push('  ↳ 이 구간 최대 한프레임 이동 ' + big.d + 'px (t=' + big.t + ')');
   });
   if(!marks.length){
     L.push('');
