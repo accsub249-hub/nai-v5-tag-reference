@@ -42,9 +42,8 @@ body{
   font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic","Apple SD Gothic Neo",
        "Noto Sans KR","Helvetica Neue",Arial,sans-serif;
   -webkit-text-size-adjust:100%;
-  padding-bottom:calc(76px + env(safe-area-inset-bottom));
+  padding-bottom:calc(22px + env(safe-area-inset-bottom));
 }
-body.cart-open{padding-bottom:calc(210px + env(safe-area-inset-bottom))}
 button,input,select{font:inherit;color:inherit}
 button{cursor:pointer;background:none;border:none;padding:0}
 /* ===================== 앱 셸 =====================
@@ -58,11 +57,56 @@ button{cursor:pointer;background:none;border:none;padding:0}
 .sidein{max-width:1040px;margin:0 auto}
 .listcol{max-width:1040px;margin:0 auto}
 .aside{display:none}
-.hd-top{display:flex;align-items:baseline;gap:8px;padding:11px 0 8px;flex-wrap:wrap}
+.hd-top{display:flex;align-items:center;gap:8px;padding:11px 0 8px;flex-wrap:wrap}
 .hd-top h1{font-size:16px;margin:0;font-weight:800;letter-spacing:.4px}
+
+/* ===== 성인 태그 토글 — 다른 조작부와 같은 토큰을 쓴다 ===== */
+.adtog{
+  margin-left:auto;min-height:var(--ctl-h-sm);
+  border:1px solid var(--ctl-bd);border-radius:var(--ctl-r-sm);background:var(--ctl-bg);
+  font-size:var(--ctl-fs-sm);font-weight:600;color:var(--ink2);
+  padding:0 var(--ctl-px-sm);display:inline-flex;align-items:center;gap:7px;white-space:nowrap;
+}
+.adtog:hover{border-color:var(--ctl-bd-hover)}
+.adtog .badge{font-size:9.5px;font-weight:800;letter-spacing:.3px;padding:1px 4px;border-radius:4px;
+  background:#efe3e3;color:#9a4b4b;border:1px solid #e3cccc}
+.adtog .sw{width:26px;height:15px;border-radius:999px;background:#d3dbe6;position:relative;
+  flex:0 0 auto;transition:background .15s}
+.adtog .sw::after{content:"";position:absolute;top:2px;left:2px;width:11px;height:11px;border-radius:50%;
+  background:#fff;transition:transform .15s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.adtog[aria-checked="true"]{color:var(--accent-ink);border-color:#cfe0ff;background:var(--accent-weak)}
+.adtog[aria-checked="true"] .sw{background:var(--accent)}
+.adtog[aria-checked="true"] .sw::after{transform:translateX(11px)}
+.adtog[aria-checked="true"] .badge{background:#f7e2e2;color:#8d4040;border-color:#e8c9c9}
+
+/* ===== 동의 확인 모달 ===== */
+#admodal{position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;
+  padding:18px}
+#admodal[hidden]{display:none}
+.admask{position:absolute;inset:0;background:rgba(18,26,38,.45)}
+.adbox{position:relative;background:var(--card);border:1px solid var(--line);border-radius:14px;
+  box-shadow:0 12px 40px rgba(16,26,40,.28);max-width:440px;width:100%;
+  max-height:calc(100vh - 36px);overflow-y:auto;overscroll-behavior:contain}
+.adhead{display:flex;align-items:center;gap:8px;padding:15px 17px 11px;border-bottom:1px solid var(--line2)}
+.adhead .badge{font-size:10.5px;font-weight:800;letter-spacing:.4px;padding:2px 6px;border-radius:5px;
+  background:#f3e0e0;color:#8d4040;border:1px solid #e6cbcb;flex:0 0 auto}
+.adhead b{font-size:14.5px}
+.adbody{padding:13px 17px 3px;font-size:13px;line-height:1.65;color:var(--ink2)}
+.adbody p{margin:0 0 10px}
+.adbody b{color:var(--ink)}
+.adwarn{background:#fdf5ef;border:1px solid #f0ddcc;border-left:3px solid #d9924c;
+  border-radius:8px;padding:9px 11px;color:#7d5327}
+.adnote{font-size:12px;color:var(--ink3)}
+.adbtns{display:flex;gap:8px;padding:11px 17px 15px}
+.adbtn{flex:1 1 auto;min-height:var(--ctl-h);border:1px solid var(--ctl-bd);border-radius:var(--ctl-r);
+  background:var(--ctl-bg);font-size:var(--ctl-fs);font-weight:700;color:var(--ink2);
+  display:inline-flex;align-items:center;justify-content:center;padding:0 var(--ctl-px)}
+.adbtn:hover{border-color:var(--ctl-bd-hover)}
+.adbtn.pri{flex:2 1 auto;background:var(--accent);border-color:var(--accent);color:#fff}
+.adbtn.pri:hover{background:#2f6fd8;border-color:#2f6fd8}
+@media (max-width:420px){ .adbtns{flex-direction:column-reverse} .adbtn{width:100%} }
 .sortwrap{display:flex;flex-direction:column;align-items:stretch;gap:5px;padding:0 0 9px}
 .sortwrap label{font-size:11.5px;color:var(--ink3);font-weight:600;padding-left:2px}
-.sidecart{display:none}
 
 /* ===== 큰 컨트롤: 검색창 · 분류 드롭다운 3단 · 정렬 =====
    높이·테두리·모서리·글자크기·여백을 모두 토큰으로 공유한다. */
@@ -114,7 +158,6 @@ button{cursor:pointer;background:none;border:none;padding:0}
    1360px+ : 관련 태그를 펼치면 우측 옆칸이 열린다 */
 @media (min-width:900px){
   body{padding-bottom:28px}
-  body.cart-open{padding-bottom:28px}
   .shell{
     display:grid;gap:0 30px;align-items:start;
     grid-template-columns:262px minmax(0,830px);
@@ -132,8 +175,6 @@ button{cursor:pointer;background:none;border:none;padding:0}
   .hd-top{padding:0 0 14px}
   .hd-top h1{font-size:19px}
   .sortwrap{padding:2px 0 12px}
-  .sidecart{display:block}
-  #cart{display:none}
   .footwide{display:block}
   .footnarrow{display:none}
   footer{margin-top:18px;padding:12px 0 0;border-top:1px solid var(--line2)}
@@ -145,7 +186,7 @@ button{cursor:pointer;background:none;border:none;padding:0}
 }
 
 /* ===== 작은 컨트롤: 버튼 · 토글 · 칩 — 같은 계열로 ===== */
-.act, .tog, .seg button, .relfil .rf, .cartbtn, .radd{
+.act, .tog, .seg button, .relfil .rf, .rgo{
   min-height:var(--ctl-h-sm);
   border:1px solid var(--ctl-bd);
   border-radius:var(--ctl-r-sm);
@@ -157,7 +198,7 @@ button{cursor:pointer;background:none;border:none;padding:0}
   display:inline-flex;align-items:center;gap:5px;white-space:nowrap;
   line-height:1.2;
 }
-.act:hover, .tog:hover, .seg button:hover, .relfil .rf:hover, .cartbtn:hover{
+.act:hover, .tog:hover, .seg button:hover, .relfil .rf:hover, .rgo:hover{
   border-color:var(--ctl-bd-hover);
 }
 .act.relbtn.on, .tog.on{background:var(--accent-weak);border-color:#b9d0ff;color:var(--accent-ink)}
@@ -208,7 +249,9 @@ button{cursor:pointer;background:none;border:none;padding:0}
 .sug button .n{font-size:11px;color:var(--ink3);font-weight:500;font-variant-numeric:tabular-nums}
 
 /* ---------- list ---------- */
-#viewport{position:relative;min-height:200px}
+/* 가상 목록은 스크롤 위치를 직접 계산한다. 브라우저의 스크롤 앵커링이 끼어들면
+   계산과 겹칠 수 있으므로 꺼 둔다. (이번 튐 현상의 원인은 아니었지만 안전장치) */
+#viewport{position:relative;min-height:200px;overflow-anchor:none}
 #spacer{position:relative;width:100%}
 #rows{position:absolute;top:0;left:0;right:0}
 /* ---- 행: 카드가 아니라 왼쪽 정렬 텍스트 블록 ---- */
@@ -258,7 +301,10 @@ button{cursor:pointer;background:none;border:none;padding:0}
 /* related panel */
 .relp{border-top:1px solid var(--line2);background:#fafbfd;padding:9px 11px 11px}
 .relhead{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-bottom:8px}
-.relhead .cnt{font-size:11px;color:var(--ink3);margin-left:auto;font-variant-numeric:tabular-nums}
+.relhead .cnt{font-size:11px;color:var(--ink3);margin-left:auto;font-variant-numeric:tabular-nums;
+  display:inline-flex;align-items:center;gap:5px}
+.relhead .cnt .more{font-size:10px;color:var(--accent-ink);background:var(--accent-weak);
+  border-radius:999px;padding:1px 6px;font-weight:600}
 /* 패널 안 분류 고르기 */
 .relfil{display:flex;flex-wrap:wrap;gap:5px;padding:0 0 9px}
 .relfil .rf{--rfc:var(--ink2);color:var(--rfc);min-height:30px}
@@ -291,8 +337,22 @@ button{cursor:pointer;background:none;border:none;padding:0}
 .rstat{flex:0 0 auto;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:1px}
 .rpct{font-size:12px;font-weight:700;color:var(--accent-ink);font-variant-numeric:tabular-nums}
 .rposts{font-size:10.5px;color:var(--ink3);font-variant-numeric:tabular-nums}
-.radd{flex:0 0 auto;width:30px;min-height:30px;padding:0;justify-content:center;font-size:15px}
-.radd.in{background:var(--accent);border-color:var(--accent);color:#fff}
+/* 관련 태그 → 본문 항목으로 이동 */
+.rgo{flex:0 0 auto;min-height:30px;padding:0 9px;justify-content:center;
+  color:var(--accent-ink);background:var(--accent-weak);border-color:#cfe0ff}
+.rgo:hover{background:#e3edff;border-color:var(--accent)}
+.rgo.off{color:var(--ink3);background:var(--ctl-bg);border-color:var(--ctl-bd);
+  min-width:34px;cursor:default}
+/* 관련 태그 목록만 높이를 묶고 그 안에서 굴린다.
+   overscroll-behavior:contain — 목록 끝에 닿아도 페이지가 딸려 움직이지 않는다. */
+.relbody{
+  max-height:min(54vh, 430px);
+  overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+  overflow-anchor:none;padding-right:3px;
+}
+.relbody::-webkit-scrollbar{width:8px}
+.relbody::-webkit-scrollbar-thumb{background:#ccd6e4;border-radius:4px}
+.relbody::-webkit-scrollbar-track{background:transparent}
 .relempty{font-size:12.5px;color:var(--ink3);padding:10px 2px;text-align:center}
 .relall{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap}
 
@@ -304,6 +364,7 @@ button{cursor:pointer;background:none;border:none;padding:0}
   border-radius:50%;animation:sp .7s linear infinite;flex:0 0 auto}
 #relstatus.err{background:var(--warn-bg);border-color:var(--warn-line);color:var(--warn)}
 .act.relbtn[disabled]{opacity:.5;cursor:default}
+.sitenote{margin:6px 0 0;font-size:10.5px;line-height:1.55;color:var(--ink3);opacity:.85}
 .empty{text-align:center;padding:48px var(--pad-x);color:var(--ink3);font-size:14px;line-height:1.7}
 .empty b{color:var(--ink2);display:block;font-size:15px;margin-bottom:5px}
 
@@ -319,44 +380,20 @@ button{cursor:pointer;background:none;border:none;padding:0}
 .spclose:hover{background:var(--line2);color:var(--ink)}
 .sidepanel-in .relp{border-top:0;background:var(--card);padding:10px 12px 13px}
 .sidepanel-in .relgrid{grid-template-columns:1fr}
+.sidepanel-in .relbody{max-height:calc(100vh - 250px)}
 .row.exp{background:var(--accent-weak);border-radius:8px}
-
-.sidecart{border-top:1px solid var(--line2);padding:12px 0 4px;margin-top:4px}
-.scHead{font-size:12px;color:var(--ink2);font-weight:600;padding:0 0 8px}
-.scHead b{color:var(--accent-ink);font-variant-numeric:tabular-nums}
-.scBtns{display:flex;gap:6px;padding:0 0 9px}
-.scBtns .cartbtn{flex:1 1 auto;min-height:34px;font-size:12px;padding:7px 8px}
-.scList{display:flex;flex-wrap:wrap;gap:5px;max-height:190px;overflow-y:auto}
-.scEmpty{font-size:11.5px;color:var(--ink3);line-height:1.6;margin:0}
-.scEmpty b{color:var(--ink2)}
-
-/* ---------- cart ---------- */
-#cart{
-  position:fixed;left:0;right:0;bottom:0;z-index:50;background:rgba(255,255,255,.97);
-  backdrop-filter:blur(8px);border-top:1px solid var(--line);
-  box-shadow:0 -2px 14px rgba(20,32,50,.09);padding-bottom:env(safe-area-inset-bottom);
+/* '이동'으로 막 도착한 행을 잠깐 짚어 준다 */
+.row.flash{animation:flashrow 1.6s ease-out}
+@keyframes flashrow{
+  0%,45%{background:#fff5d6;box-shadow:inset 0 0 0 2px #e6c052}
+  100%{background:var(--card);box-shadow:none}
 }
-.cartbar{display:flex;align-items:center;gap:7px;padding:9px 10px;max-width:1040px;margin:0 auto}
-.cartcount{font-size:12.5px;color:var(--ink2);font-weight:600;flex:0 0 auto}
-.cartcount b{color:var(--accent-ink);font-variant-numeric:tabular-nums}
-.cartbtn{min-height:var(--ctl-h);padding:0 13px;font-weight:700;justify-content:center}
-.cartbtn.pri{background:var(--accent);border-color:var(--accent);color:#fff;flex:1 1 auto}
-.cartbtn.pri:disabled{background:#c9d3e2;border-color:#c9d3e2;cursor:default}
-.cartbtn.gh{flex:0 0 auto;padding:0 11px}
-.cartlist{max-width:1040px;margin:0 auto;padding:0 10px 10px;display:none;max-height:135px;overflow-y:auto;
-  flex-wrap:wrap;gap:5px}
-body.cart-open .cartlist{display:flex}
-.cchip{display:inline-flex;align-items:center;gap:5px;background:var(--accent-weak);color:var(--accent-ink);
-  border:1px solid #cfe0ff;border-radius:999px;padding:4px 5px 4px 10px;font-size:11.5px;
-  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;max-width:100%}
-.cchip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cchip button{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  font-size:13px;color:var(--accent-ink);flex:0 0 auto}
-.cchip button:hover{background:#d6e4ff}
+
+
 
 /* ---------- toast / footer / loader ---------- */
 #toast{
-  position:fixed;left:50%;transform:translateX(-50%) translateY(20px);bottom:calc(84px + env(safe-area-inset-bottom));
+  position:fixed;left:50%;transform:translateX(-50%) translateY(20px);bottom:calc(22px + env(safe-area-inset-bottom));
   background:#16202c;color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;z-index:70;
   opacity:0;transition:opacity .18s,transform .18s;pointer-events:none;max-width:88vw;text-align:center;
   font-weight:500;box-shadow:0 4px 18px rgba(0,0,0,.2);
@@ -391,7 +428,12 @@ footer a:hover{color:var(--ink2)}
 
 <aside class="side">
   <div class="sidein">
-    <div class="hd-top"><h1>BOORU V5</h1></div>
+    <div class="hd-top">
+      <h1>BOORU V5</h1>
+      <button class="adtog" id="adTog" role="switch" aria-checked="false">
+        <span class="badge">18+</span><span class="lbl">성인 태그</span><span class="sw"></span>
+      </button>
+    </div>
     <div class="searchrow">
       <div class="sbox">
         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
@@ -410,9 +452,9 @@ footer a:hover{color:var(--ink2)}
       <label for="sort">정렬</label>
       <select id="sort"></select>
     </div>
-    <div class="sidecart" id="sidecart"></div>
     <footer class="footwide">
       <p>게시물 수 <a href="https://huggingface.co/datasets/HDiffusion/historical-danbooru-tag-counts" target="_blank" rel="noopener noreferrer">HDiffusion/historical-danbooru-tag-counts</a> (Apache-2.0) · <a href="https://github.com/DraconicDragon/dbr-e621-lists-archive" target="_blank" rel="noopener noreferrer">DraconicDragon/dbr-e621-lists-archive</a> · 설명·위키 <a href="https://danbooru.donmai.us" target="_blank" rel="noopener noreferrer">danbooru.donmai.us</a> · 한글 데이터 <a href="https://arca.live/b/aiart/141288889" target="_blank" rel="noopener noreferrer">단보루 태그툴</a> (알에이치플러스)</p>
+      <p class="sitenote">이 사이트는 태그 자료만 제공하며 이미지를 포함하지 않습니다. 외부 링크는 성인 콘텐츠가 포함된 단부루로 연결됩니다.</p>
     </footer>
   </div>
 </aside>
@@ -425,6 +467,7 @@ footer a:hover{color:var(--ink2)}
   <div id="empty" class="empty" style="display:none"></div>
   <footer class="footnarrow">
     <p>게시물 수 <a href="https://huggingface.co/datasets/HDiffusion/historical-danbooru-tag-counts" target="_blank" rel="noopener noreferrer">HDiffusion/historical-danbooru-tag-counts</a> (Apache-2.0) · <a href="https://github.com/DraconicDragon/dbr-e621-lists-archive" target="_blank" rel="noopener noreferrer">DraconicDragon/dbr-e621-lists-archive</a> · 설명·위키 <a href="https://danbooru.donmai.us" target="_blank" rel="noopener noreferrer">danbooru.donmai.us</a> · 한글 데이터 <a href="https://arca.live/b/aiart/141288889" target="_blank" rel="noopener noreferrer">단보루 태그툴</a> (알에이치플러스)</p>
+      <p class="sitenote">이 사이트는 태그 자료만 제공하며 이미지를 포함하지 않습니다. 외부 링크는 성인 콘텐츠가 포함된 단부루로 연결됩니다.</p>
   </footer>
 </main>
 
@@ -432,20 +475,32 @@ footer a:hover{color:var(--ink2)}
 
 </div>
 
-<div id="cart">
-  <div class="cartbar">
-    <span class="cartcount">담은 태그 <b id="cartN">0</b></span>
-    <button class="cartbtn pri" id="cartCopy" disabled>전체 복사</button>
-    <button class="cartbtn gh" id="cartToggle">목록</button>
-    <button class="cartbtn gh" id="cartClear">비우기</button>
-  </div>
-  <div class="cartlist" id="cartList"></div>
-</div>
 
 <div id="toast"></div>
 
+<div id="admodal" hidden>
+  <div class="admask" data-adcancel="1"></div>
+  <div class="adbox" role="dialog" aria-modal="true" aria-labelledby="adttl">
+    <div class="adhead"><span class="badge">18+</span><b id="adttl">성인 태그를 표시할까요?</b></div>
+    <div class="adbody">
+      <p>켜면 성인 관련 태그의 <b>이름과 설명</b>이 목록·검색·관련 태그에 함께 표시됩니다.
+         이 사이트는 태그 자료만 제공하며 이미지는 포함하지 않습니다.</p>
+      <p class="adwarn">거주 지역에서 해당 콘텐츠에 접근하는 것이 허용되는지, 그리고 만 18세 이상
+         또는 거주 지역의 성년 연령에 도달했는지 확인해 주세요.</p>
+      <p>이후의 열람·복사·사용에 대한 책임은 이용자 본인에게 있습니다. 현지 법령과 이용하시는
+         플랫폼의 규정을 따라 주세요.</p>
+      <p class="adnote">이 사이트의 위키 링크는 성인 콘텐츠가 포함된 외부 사이트(단부루)로 연결됩니다.</p>
+    </div>
+    <div class="adbtns">
+      <button class="adbtn" data-adcancel="1">취소</button>
+      <button class="adbtn pri" data-adok="1">만 18세 이상이며 동의합니다</button>
+    </div>
+  </div>
+</div>
+
 <script id="D1" type="text/plain"></script>
 <script id="D2" type="text/plain"></script>
+
 <script>
 "use strict";
 (function(){
@@ -627,12 +682,9 @@ var S = {
   q:'', cat:null, group:'', topic:'', sort:'rel'
 };
 var results = [];
-var cart = [];
-var cartSet = new Set();
 var expanded = -1;                                  // 펼쳐진 관련 태그 패널의 태그 id
 var expandedPos = -1;                               // 그 태그의 목록 위치
-/* 키에 v2 를 붙여, 예전 버전에서 저장된 '빈도순' 설정이 새 기본값을 덮어쓰지 않게 한다.
-   (담은 태그 목록은 키를 그대로 두어 그대로 유지된다) */
+/* 키에 v2 를 붙여, 예전 버전에서 저장된 '빈도순' 설정이 새 기본값을 덮어쓰지 않게 한다. */
 var relOpts = {
   sort: LS.get('nai5.v2.relsort','cos'),     // 기본: 연관도(코사인)순
   hide: LS.get('nai5.v2.relhide', true),
@@ -640,6 +692,15 @@ var relOpts = {
 };
 /* 패널 안에서 고른 분류(그룹). null = 전체. 다른 태그를 펼치면 초기화된다. */
 var relFilter = null;
+
+/* ---------- 성인 태그 ----------
+   기본은 꺼짐. 꺼져 있으면 목록·검색·관련 태그 어디에도 나오지 않는다.
+   판정 기준은 빌드 때 정해 D.ad(본 목록) / R.ad(관련 태그 이름 사전) 로 들어온다.
+   미성년 관련 차단 태그 34개는 이 토글과 무관하게 데이터 자체에서 빠져 있다. */
+var adultOn = LS.get('nai5.adult', false) === true;
+var adultSet = null, relAdultSet = null;
+function isAdult(i){ return adultSet ? adultSet.has(i) : false; }
+function relIsAdult(j){ return relAdultSet ? relAdultSet.has(j) : false; }
 var groupCount = {};
 /* 넓은 화면에서는 관련 태그를 우측 옆칸에 띄운다. 행 안에 넣지 않으므로
    행 높이가 변하지 않아 가상 스크롤이 훨씬 안정적이다. */
@@ -682,11 +743,11 @@ async function boot(){
            '태그 데이터를 내려받는 중… ' + mb(got) + (total ? ' / ' + mb(total) : '') + ' MB');
     });
     N = D.n.length;
+    adultSet = new Set(D.ad || []);
     prog(0.42, '검색 색인을 만드는 중…'); await raf();
     await buildIndex();
     prog(0.92, '화면을 준비하는 중…'); await raf();
     buildUI();
-    loadCart();
     apply();
     $('#loader').classList.add('gone');
   }catch(err){
@@ -697,7 +758,8 @@ async function boot(){
     return;
   }
 
-  // 관련 태그 데이터는 뒤에서 따로 받는다 — 목록은 먼저 쓸 수 있게
+  // 관련 태그 데이터는 뒤에서 따로 받는다 — 목록은 먼저 쓸 수 있게.
+  // 1단계로 코사인 상위 60개를 받아 바로 쓰게 하고, 61~200위는 뒤에서 이어 받는다.
   try{
     setRelStatus('관련 태그 데이터를 내려받는 중…');
     R = await loadPayload('D2', 'data/related.json.gz', function(got, total){
@@ -705,12 +767,48 @@ async function boot(){
     });
     relIdxOf = R.m;
     commonSet = new Set(R.c);
+    relAdultSet = new Set(R.ad || []);
     relReady = true;
     setRelStatus('');
     layout(true);
+    loadStage2();                       // 기다리지 않는다
   }catch(err){
     setRelStatus('관련 태그 데이터를 불러오지 못했습니다 — 새로고침해 주세요');
   }
+}
+
+/* ---------- 2단계: 61~200위를 조각으로 이어 받기 ----------
+   실패하거나 느려도 1단계(상위 60개)만으로 사이트는 그대로 동작한다. */
+var REL2 = ["related2_00.json.gz", "related2_01.json.gz"];
+var rel2Total = REL2.length, rel2Done = 0, rel2Failed = false;
+function rel2Loading(){ return rel2Total > 0 && rel2Done < rel2Total && !rel2Failed; }
+async function loadStage2(){
+  if(!rel2Total) return;
+  for(var i=0;i<REL2.length;i++){
+    try{
+      var part = await loadPayload('D3_' + i, 'data/' + REL2[i]);
+      var r = part.r;
+      for(var k in r){
+        if(!Object.prototype.hasOwnProperty.call(r, k)) continue;
+        var cur = R.r[k];
+        R.r[k] = cur ? cur.concat(r[k]) : r[k];
+      }
+      rel2Done++;
+      onStage2Chunk();
+    }catch(err){
+      rel2Failed = true;                // 남은 조각은 포기하고 있는 만큼으로 계속
+      refreshOpenPanel();
+      return;
+    }
+  }
+}
+/* 조각이 도착하면 열려 있는 패널만 조용히 다시 그린다.
+   목록은 패널 안에서만 길어지고(내부 스크롤) 행 높이는 상한이 있어 튀지 않는다. */
+function onStage2Chunk(){ refreshOpenPanel(); }
+function refreshOpenPanel(){
+  if(expanded < 0) return;
+  if(sideMode()) drawSidePanel();
+  else reopenPanel();
 }
 
 async function buildIndex(){
@@ -746,22 +844,31 @@ async function buildIndex(){
 }
 
 /* ============================ UI construction ============================ */
-function buildUI(){
-  // 분류별 개수 (드롭다운 라벨용)
-  var counts = {};
-  for(var i=0;i<N;i++) counts[D.c[i]] = (counts[D.c[i]]||0)+1;
-  counts[9] = D.nai.length;
-  groupCount = {};
-  for(var gi3=0; gi3<N; gi3++){
-    if(D.c[gi3] !== 0) continue;
-    var gg = groupOf(gi3);
-    groupCount[gg] = (groupCount[gg] || 0) + 1;
+/* 분류별 개수 — 성인 태그를 숨기고 있으면 개수도 숨긴 기준으로 센다.
+   숨겼는데 개수는 그대로면 어긋나 보인다. 토글을 켜고 끌 때마다 다시 센다. */
+var catCount = {}, visibleN = 0;
+function recount(){
+  catCount = {}; groupCount = {}; visibleN = 0;
+  for(var i=0;i<N;i++){
+    if(!adultOn && isAdult(i)) continue;
+    visibleN++;
+    catCount[D.c[i]] = (catCount[D.c[i]] || 0) + 1;
+    if(D.c[i] === 0){
+      var gg = groupOf(i);
+      groupCount[gg] = (groupCount[gg] || 0) + 1;
+    }
   }
-
-  var copts = [['', '전체 분류 (' + fmt(N) + ')']];
+  catCount[9] = D.nai.length;
+}
+function fillCatSelect(){
+  var copts = [['', '전체 분류 (' + fmt(visibleN) + ')']];
   for(var ci=0; ci<CATS.length; ci++)
-    copts.push([CATS[ci].id, CATS[ci].name + ' (' + fmt(counts[CATS[ci].id] || 0) + ')']);
-  fillSelect($('#fCat'), copts, '');
+    copts.push([CATS[ci].id, CATS[ci].name + ' (' + fmt(catCount[CATS[ci].id] || 0) + ')']);
+  fillSelect($('#fCat'), copts, S.cat === null ? '' : String(S.cat));
+}
+function buildUI(){
+  recount();
+  fillCatSelect();
   $('#fCat').addEventListener('change', function(){
     setCat(this.value === '' ? null : +this.value); apply();
   });
@@ -789,16 +896,19 @@ function buildUI(){
     qel.value = ''; S.q = ''; $('#qclear').classList.remove('on'); qel.focus(); apply();
   });
 
-  // cart
-  $('#cartCopy').addEventListener('click', function(){
-    if(!cart.length) return;
-    copyText(cart.join(', '), '태그 ' + cart.length + '개를 복사했습니다');
+
+  // 성인 태그 토글 — 켤 때만 동의 확인, 끌 때는 바로
+  syncAdultToggle();
+  $('#adTog').addEventListener('click', function(){
+    if(adultOn){ setAdult(false); return; }
+    openAdultModal();
   });
-  $('#cartToggle').addEventListener('click', function(){ document.body.classList.toggle('cart-open'); });
-  $('#cartClear').addEventListener('click', function(){
-    if(!cart.length) return;
-    cart = []; cartSet = new Set(); saveCart(); renderCart(); refreshAddStates();
-    toast('담은 태그를 비웠습니다');
+  $('#admodal').addEventListener('click', function(e){
+    if(e.target.closest('[data-adok]')){ closeAdultModal(); setAdult(true); return; }
+    if(e.target.closest('[data-adcancel]')) closeAdultModal();
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && !$('#admodal').hidden) closeAdultModal();
   });
 
   window.addEventListener('scroll', onScroll, {passive:true});
@@ -821,6 +931,39 @@ function buildUI(){
     measureCPL(); layout(true);
   });
   measureCPL();
+}
+
+/* ---------- 성인 태그 토글 ---------- */
+function syncAdultToggle(){
+  var t = $('#adTog');
+  if(!t) return;
+  t.setAttribute('aria-checked', adultOn ? 'true' : 'false');
+  t.querySelector('.lbl').textContent = '성인 태그';
+  t.title = adultOn ? '성인 태그를 표시하고 있습니다. 누르면 숨깁니다.'
+                    : '성인 태그를 숨기고 있습니다. 누르면 표시합니다.';
+}
+function setAdult(on){
+  adultOn = !!on;
+  LS.set('nai5.adult', adultOn);
+  syncAdultToggle();
+  recount();
+  fillCatSelect();
+  /* 숨긴 분류를 고르고 있었으면 필터를 풀어 준다 */
+  if(!adultOn && S.cat === 0 && S.group !== '' && !groupCount[+S.group]){ S.group = ''; S.topic = ''; }
+  syncSelects();
+  apply();
+  toast(adultOn ? '성인 태그를 표시합니다' : '성인 태그를 숨깁니다');
+}
+var adLastFocus = null;
+function openAdultModal(){
+  adLastFocus = document.activeElement;
+  $('#admodal').hidden = false;
+  var b = $('#admodal [data-adok]');
+  if(b) b.focus();
+}
+function closeAdultModal(){
+  $('#admodal').hidden = true;
+  if(adLastFocus && adLastFocus.focus) adLastFocus.focus();
 }
 
 /* ---------- 분류 드롭다운 3단 (대 → 중 → 소) ---------- */
@@ -898,16 +1041,13 @@ function setTopicSel(t){
 function focusTopic(ti){
   S.cat = 0; S.group = String(D.gof[ti]); S.topic = String(ti);
   syncSelects(); apply();
-  window.scrollTo({ top:0, behavior:'smooth' });
 }
 function focusGroup(gi){
   S.cat = 0; S.group = String(gi); S.topic = '';
   syncSelects(); apply();
-  window.scrollTo({ top:0, behavior:'smooth' });
 }
 function focusCat(c){
   setCat(c === S.cat ? null : c); apply();
-  window.scrollTo({ top:0, behavior:'smooth' });
 }
 
 /* ============================ filtering / search ============================ */
@@ -964,6 +1104,7 @@ function apply(){
     scores = searching ? new Float32Array(N) : null;
     var c = D.c, p5f = D.p5, s_ = D.s, t_ = D.t, w_ = D.w, kk = D.k;
     for(i=0;i<N;i++){
+      if(!adultOn && isAdult(i)) continue;          // 성인 태그 숨김
       if(S.cat !== null && c[i] !== S.cat) continue;
       if(topic !== -2 && t_[i] !== topic) continue;
       if(grp !== -2){
@@ -1010,7 +1151,14 @@ function apply(){
 
   renderNotice(qn, cho);
   $('#count').innerHTML = '<b>' + fmt(results.length) + '</b>개' + (searching ? ' 검색됨' : ' 표시 중');
-  expanded = -1;
+  /* 목록이 새로 짜이면 위치 번호가 전부 달라지므로 패널 상태도 완전히 비운다.
+     (expandedPos 만 남으면 엉뚱한 행의 높이를 건드리게 된다) */
+  expanded = -1; expandedPos = -1; panelH = 0; relFilter = null; flashPos = -1;
+  $('#sidepanel').innerHTML = '';
+  document.body.classList.remove('haspanel');
+  /* 결과가 바뀌면 위치 번호의 의미가 달라진다. 보던 자리를 유지하려 해도
+     가리키는 태그가 다르므로, 맨 위에서 다시 보는 편이 낫다. */
+  if(window.scrollY > 0) window.scrollTo(0, 0);
   layout(true);
 }
 
@@ -1053,8 +1201,7 @@ function renderNotice(qn, cho){
     var b = e.target.closest('button[data-copy]');
     if(b){ copyText(b.dataset.copy, esc(b.dataset.copy) + ' 복사했습니다'); return; }
     var g = e.target.closest('button[data-go]');
-    if(g){ $('#q').value = g.dataset.go; S.q = g.dataset.go; $('#qclear').classList.add('on'); apply();
-           window.scrollTo({top:0, behavior:'smooth'}); }
+    if(g){ $('#q').value = g.dataset.go; S.q = g.dataset.go; $('#qclear').classList.add('on'); apply(); }
   };
 }
 function naiForm(name){
@@ -1065,14 +1212,27 @@ function naiForm(name){
 /* ============================ virtual list ============================ */
 /* 행마다 설명 길이가 달라 높이가 제각각이다. 높이 배열을 펜윅 트리로 관리해
    "행 -> 화면 위치"(offsetOf)와 "화면 위치 -> 행"(posAtOffset)을 양방향으로
-   같은 자료에서 뽑는다. 그려진 행은 실제 높이를 재서 트리를 고치므로, 관련
-   태그 패널을 펼쳐 행이 길어져도 따로 처리할 게 없다. */
+   같은 자료에서 뽑는다.
+
+   높이는 두 조각으로 나눠 들고 있다.
+     base[p]  — 관련 태그 패널을 뺀 행 높이 (추정 -> 그려지면 실측으로 승급)
+     panelH   — 지금 펼쳐진 패널이 더하는 높이. 펼친 행이 하나뿐이라 값 하나면 된다.
+   펜윅에 들어가는 값은 base[p] + (p === expandedPos ? panelH : 0).
+
+   왜 나눠 두느냐: 예전에는 "그려진 행을 실측해서 고친다"가 전부였다. 그래서 펼친
+   행이 화면 밖으로 밀려나 DOM 에서 지워진 뒤에 패널을 닫으면, 그 행의 높이가
+   트리에 남은 채 아무도 고치지 않았다. 나중에 그 행이 다시 그려질 때 한꺼번에
+   수천 px 이 정정되면서 화면이 튀었다. 이제는 펼침/접힘이 DOM 과 무관하게
+   fenAdd 한 번으로 정확히 반영된다. */
 var rowsEl = document.getElementById('rows'), spacerEl = document.getElementById('spacer');
 var viewportEl = document.getElementById('viewport');
 var pool = new Map();          // result position -> element
 var lastRange = [-1,-1];
-var fen = null, fenN = 0, meas = null;
+var fen = null, fenN = 0;
+var base = null, measured = null;
+var panelH = 0;                // 펼쳐진 패널이 더하는 높이 (없으면 0)
 var cpl = 44;                  // 설명 한 줄에 들어가는 대략 글자 수
+var flashPos = -1;             // '이동'으로 막 도착한 행 (잠깐 강조)
 
 function fenBuild(vals){
   fenN = vals.length;
@@ -1082,7 +1242,6 @@ function fenBuild(vals){
     var j = i + (i & -i);
     if(j <= fenN) fen[j] += fen[i];
   }
-  meas = new Uint8Array(fenN);
 }
 function fenAdd(i, delta){
   for(var x=i+1; x<=fenN; x += x & -x) fen[x] += delta;
@@ -1125,9 +1284,23 @@ function estH(id){
 }
 function buildHeights(){
   measureCPL();
-  var v = new Float64Array(results.length);
-  for(var i=0;i<results.length;i++) v[i] = estH(results[i]);
+  var n = results.length;
+  base = new Float64Array(n);
+  measured = new Uint8Array(n);
+  for(var i=0;i<n;i++) base[i] = estH(results[i]);
+  panelH = 0;                                   // 목록이 새로 짜이면 패널도 닫힌다
+  var v = new Float64Array(n);
+  v.set(base);
   fenBuild(v);
+}
+/* 트리에 들어가 있어야 할 값 */
+function wantH(p){ return base[p] + (p === expandedPos ? panelH : 0); }
+/* 트리를 wantH 에 맞춘다. 바뀌었으면 true */
+function syncH(p){
+  var want = wantH(p), cur = fenAt(p);
+  if(Math.abs(want - cur) <= 0.5) return false;
+  fenAdd(p, want - cur);
+  return true;
 }
 function clearPool(){
   pool.forEach(function(el){ el.remove(); });
@@ -1149,25 +1322,40 @@ function layout(reset){
   renderWindow();
 }
 
-/* 그려진 행의 실제 높이를 재서 트리를 고친다. 화면 위쪽 행이 바뀌면 그만큼
-   스크롤을 밀어 줘서 보고 있던 자리가 튀지 않게 한다. */
-function remeasure(from, to, anchorPos, anchorBefore){
+/* 그려진 행의 실제 높이를 재서 base[] 를 실측값으로 올린다.
+   펼쳐진 행은 패널 높이를 따로 떼어 panelH 로 잡아, base[] 는 언제나
+   '접힌 높이'만 담도록 유지한다. */
+function remeasure(from, to){
   var changed = false;
   for(var p = from; p <= to; p++){
     var el = pool.get(p);
     if(!el) continue;
     var real = el.offsetHeight;
     if(!real) continue;
-    var cur = fenAt(p);
-    if(Math.abs(real - cur) > 0.5){ fenAdd(p, real - cur); changed = true; }
-    meas[p] = 1;
-  }
-  if(changed){
-    spacerEl.style.height = totalH() + 'px';
-    var delta = fenSum(anchorPos) - anchorBefore;
-    if(delta && window.scrollY > 0) window.scrollBy(0, delta);
+    var b = real;
+    if(p === expandedPos){
+      var pe = el.querySelector('.relp');
+      var ph = pe ? pe.offsetHeight : 0;
+      if(ph){ panelH = ph; b = real - ph; }
+    }
+    if(b > 0 && Math.abs(b - base[p]) > 0.5) base[p] = b;
+    measured[p] = 1;
+    if(syncH(p)) changed = true;
   }
   return changed;
+}
+
+/* 화면 위쪽(앵커보다 앞) 행의 높이가 바뀌면 그만큼 스크롤을 밀어 줘야 보고 있던
+   자리가 그대로 있는다. 앵커 아래쪽 변화는 눈에 보이는 위치를 바꾸지 않으므로
+   건드리지 않는다. */
+function compensate(anchorPos, anchorBefore){
+  spacerEl.style.height = totalH() + 'px';
+  var delta = fenSum(anchorPos) - anchorBefore;
+  if(!delta) return 0;
+  var y = window.scrollY;
+  if(y <= 0) return 0;
+  window.scrollTo(0, Math.max(0, y + delta));    // scrollBy 는 관성 스크롤과 겹치면 누적된다
+  return delta;
 }
 
 function renderWindow(){
@@ -1178,7 +1366,7 @@ function renderWindow(){
   var anchorPos = posAtOffset(top);
   var anchorBefore = fenSum(anchorPos);
 
-  var first = Math.max(0, posAtOffset(top) - 2);
+  var first = Math.max(0, anchorPos - 2);
   var last  = Math.min(results.length - 1, posAtOffset(bottom) + 3);
 
   var drop = [];
@@ -1191,7 +1379,7 @@ function renderWindow(){
       pool.set(p, el); rowsEl.appendChild(el);
     }
   }
-  remeasure(first, last, anchorPos, anchorBefore);
+  if(remeasure(first, last)) compensate(anchorPos, anchorBefore);
   pool.forEach(function(el, pos){ el.style.transform = 'translateY(' + offsetOf(pos) + 'px)'; });
   lastRange = [first, last];
 }
@@ -1221,11 +1409,13 @@ function buildRow(id, pos){
   var d = document.createElement('div');
   d.className = 'row';
   d.dataset.pos = pos; d.dataset.id = id;
+  if(pos === flashPos) d.classList.add('flash');
   if(id < 0){ d.innerHTML = naiRowHTML(-id - 1); return d; }
   d.innerHTML = rowHTML(id);
+  /* 넓은 화면에서는 패널이 옆칸에 있으므로 행 안에 또 넣으면 안 된다 */
   if(id === expanded){
     d.classList.add('exp');
-    d.insertAdjacentHTML('beforeend', relPanelHTML(id));
+    if(!sideMode()) d.insertAdjacentHTML('beforeend', relPanelHTML(id));
   }
   return d;
 }
@@ -1257,8 +1447,6 @@ function rowHTML(i){
   if(cat === 0) h += '<button class="act relbtn' + (i === expanded ? ' on' : '') + '" data-act="rel"' +
                      (relReady ? '' : ' disabled') + '><span class="car">▸</span>' +
                      (relReady ? '관련 태그' : '관련 태그 준비 중') + '</button>';
-  h += '<button class="act add' + (cartSet.has(naiOf[i]) ? ' in' : '') + '" data-act="add">' +
-       (cartSet.has(naiOf[i]) ? '✓ 담김' : '+ 담기') + '</button>';
   h += '<span class="spacerflex"></span>';
   h += '<a class="wikia" href="https://danbooru.donmai.us/wiki_pages/' + encodeURIComponent(name) +
        '" target="_blank" rel="noopener noreferrer">위키' + (D.wk[i] ? '' : '?') + ' ↗</a>';
@@ -1295,8 +1483,6 @@ function naiRowHTML(k){
           '<span class="paren">(<span class="en">' + esc(e[0]) + '</span>)</span></button>';
   h += '<div class="path"><span>NAI전용</span><span class="sep">\u203a</span><span>' + esc(e[2]) + '</span></div>';
   h += '<p class="nodesc">단부루에는 없고 NovelAI에서만 쓰는 태그라 게시물 수와 위키가 없습니다.</p>';
-  h += '<div class="r3"><button class="act add' + (cartSet.has(e[0]) ? ' in' : '') + '" data-act="add">' +
-       (cartSet.has(e[0]) ? '✓ 담김' : '+ 담기') + '</button></div>';
   return h;
 }
 
@@ -1318,12 +1504,14 @@ function relPanelHTML(i){
   for(var j=0;j<flat.length;j+=3){
     var ri = flat[j];
     if(relOpts.hide && commonSet.has(ri)) continue;
+    if(!adultOn && relIsAdult(ri)) continue;        // 성인 태그 숨김
     items.push([ri, flat[j+1], flat[j+2]]);
   }
   items.sort(relOpts.sort === 'cos'
     ? function(a,b){ return b[2]-a[2]; }
     : function(a,b){ return b[1]-a[1]; });
-  h += '<span class="cnt">' + items.length + '개</span></div>';
+  h += '<span class="cnt">' + items.length + '개' +
+       (rel2Loading() ? '<span class="more">더 받는 중</span>' : '') + '</span></div>';
 
   // 분류별로 골라 보기 — 관련 태그가 많을 때 스크롤 대신 좁혀서 본다
   var gcount = {}, gorder = [];
@@ -1357,13 +1545,18 @@ function relPanelHTML(i){
          '<button class="act" data-rh="1" style="margin-top:8px">흔한 태그도 보기</button></div></div>';
     return h;
   }
-  h += relOpts.grp ? relGroupedHTML(items) : '<div class="relgrid">' + relItemsHTML(items) + '</div>';
+  /* 관련 태그가 60개까지 되므로 목록만 따로 감싸 높이를 묶고 안에서 굴린다.
+     행이 화면 몇 배씩 길어지지 않으니 목록을 둘러보기도 쉽고, 가상 스크롤이
+     다뤄야 할 높이 변동 폭도 작아진다. 정렬·분류 칩·복사 버튼은 밖에 남겨
+     스크롤과 무관하게 항상 손에 닿게 둔다. */
+  h += '<div class="relbody">' +
+       (relOpts.grp ? relGroupedHTML(items) : '<div class="relgrid">' + relItemsHTML(items) + '</div>') +
+       '</div>';
   var all = items.map(function(x){
     var m = relIdxOf[x[0]];
     return m >= 0 ? naiOf[m] : R.t[x[0]].replace(/_/g,' ');
   });
-  h += '<div class="relall"><button class="act" data-rall="' + esc(all.join(', ')) + '">📋 보이는 ' + items.length + '개 한 번에 복사</button>' +
-       '<button class="act" data-radd-all="' + esc(all.join('␟')) + '">+ 전부 담기</button></div>';
+  h += '<div class="relall"><button class="act" data-rall="' + esc(all.join(', ')) + '">📋 보이는 ' + items.length + '개 한 번에 복사</button></div>';
   h += '</div>';
   return h;
 }
@@ -1387,8 +1580,11 @@ function relItemsHTML(items){
          '<span class="rk">' + (kr ? esc(kr) : (mi < 0 ? '목록 밖 태그' : '한글명 없음')) + '</span></button>' +
          '<span class="rstat"><span class="rpct">' + pct + '</span>' +
          '<span class="rposts">' + (pc >= 0 ? fmtShort(pc) : '—') + '</span></span>' +
-         '<button class="radd' + (cartSet.has(nai) ? ' in' : '') + '" data-radd="' + esc(nai) + '" aria-label="담기">' +
-         (cartSet.has(nai) ? '✓' : '+') + '</button></div>';
+         (mi >= 0
+            ? '<button class="rgo" data-goto="' + mi + '" title="이 태그 항목으로 이동" aria-label="' +
+              esc(nm) + ' 항목으로 이동">이동</button>'
+            : '<span class="rgo off" title="이 목록에 없는 태그입니다">—</span>') +
+         '</div>';
   }
   return h;
 }
@@ -1449,50 +1645,88 @@ function drawSidePanel(){
     '<button class="spclose" data-spclose="1" aria-label="닫기">×</button></div>' +
     relPanelHTML(expanded) + '</div>';
 }
-function closePanel(){
-  var prev = expanded;
-  expanded = -1; expandedPos = -1; relFilter = null;
-  $('#sidepanel').innerHTML = '';
-  document.body.classList.remove('haspanel');
-  pool.forEach(function(el){
-    if(+el.dataset.id === prev){
-      var p = el.querySelector('.relp'); if(p) p.remove();
-    }
-    el.classList.remove('exp');
-    var b = el.querySelector('.relbtn'); if(b) b.classList.remove('on');
-  });
-  if(!sideMode()) renderWindow();
+/* 지금 화면 맨 위에 걸려 있는 행과 그 앞까지의 높이 합 */
+function anchorNow(){
+  var vpTop = viewportEl.getBoundingClientRect().top + window.scrollY;
+  var p = posAtOffset(Math.max(0, window.scrollY - vpTop));
+  return { pos: p, before: fenSum(p) };
 }
 
+/* 인라인(좁은 화면) 패널을 바꾼다. id < 0 이면 닫기만.
+   핵심: 이전 패널 높이를 DOM 존재 여부와 무관하게 트리에서 정확히 뺀다.
+   예전에는 이전 행이 풀 밖이면 그냥 넘어가서, 트리에 유령 높이가 남았다. */
+function setInlinePanel(id, pos, rowEl){
+  var a = anchorNow();
+
+  if(expandedPos >= 0 && panelH){
+    var prev = pool.get(expandedPos);
+    if(prev){
+      var pp = prev.querySelector('.relp'); if(pp) pp.remove();
+      prev.classList.remove('exp');
+      var pb = prev.querySelector('.relbtn'); if(pb) pb.classList.remove('on');
+    }
+    fenAdd(expandedPos, -panelH);          // 풀 밖이어도 정확히 되돌린다
+    panelH = 0;
+  }
+  expanded = -1; expandedPos = -1;
+
+  if(id >= 0 && rowEl){
+    expanded = id; expandedPos = pos;
+    rowEl.classList.add('exp');
+    var nb = rowEl.querySelector('.relbtn'); if(nb) nb.classList.add('on');
+    rowEl.insertAdjacentHTML('beforeend', relPanelHTML(id));
+    measurePanel(rowEl, pos);
+  }
+
+  compensate(a.pos, a.before);
+  lastRange = [-1,-1];
+  renderWindow();
+}
+/* 방금 넣은 패널의 실제 높이를 재서 base/panelH 를 확정한다 */
+function measurePanel(rowEl, pos){
+  var pe = rowEl.querySelector('.relp');
+  panelH = pe ? pe.offsetHeight : 0;
+  var b = rowEl.offsetHeight - panelH;
+  if(b > 0){ base[pos] = b; measured[pos] = 1; }
+  syncH(pos);
+}
+
+function closePanel(){
+  $('#sidepanel').innerHTML = '';
+  document.body.classList.remove('haspanel');
+  relFilter = null;
+  if(sideMode()){
+    expanded = -1; expandedPos = -1; panelH = 0;
+    pool.forEach(function(el){
+      el.classList.remove('exp');
+      var b = el.querySelector('.relbtn'); if(b) b.classList.remove('on');
+    });
+    return;
+  }
+  setInlinePanel(-1, -1, null);
+}
+
+/* 패널 안에서 정렬·분류를 바꾸면 내용이 달라져 높이도 달라진다 */
 function reopenPanel(){
   if(sideMode()){ drawSidePanel(); return; }
   var el = pool.get(expandedPos);
   if(!el) return;
+  var a = anchorNow();
   var old = el.querySelector('.relp');
   if(old) old.remove();
   el.insertAdjacentHTML('beforeend', relPanelHTML(expanded));
-  measureExpanded();
-}
-/* 패널이 열리고 닫히면 그 행의 높이가 달라진다. 실측해서 트리를 고치면 끝. */
-function measureExpanded(){
+  measurePanel(el, expandedPos);
+  compensate(a.pos, a.before);
   lastRange = [-1,-1];
   renderWindow();
 }
 
 /* ---------- row interactions ---------- */
 function onRowClick(e){
-  var radd = e.target.closest('[data-radd]');
-  if(radd){ toggleCart(radd.dataset.radd); return; }
+  var rgo = e.target.closest('[data-goto]');
+  if(rgo){ gotoTag(+rgo.dataset.goto); return; }
   var rall = e.target.closest('[data-rall]');
   if(rall){ copyText(rall.dataset.rall, '관련 태그를 복사했습니다'); return; }
-  var raddAll = e.target.closest('[data-radd-all]');
-  if(raddAll){
-    var list = raddAll.dataset.raddAll.split('␟'), added = 0;
-    for(var i=0;i<list.length;i++) if(!cartSet.has(list[i])){ cartSet.add(list[i]); cart.push(list[i]); added++; }
-    saveCart(); renderCart(); refreshAddStates();
-    toast(added ? added + '개를 담았습니다' : '이미 모두 담겨 있습니다');
-    return;
-  }
   var rcopy = e.target.closest('[data-rcopy]');
   if(rcopy){ copyText(rcopy.dataset.rcopy, rcopy.dataset.rcopy + ' 복사'); return; }
 
@@ -1524,114 +1758,74 @@ function onRowClick(e){
     copyText(txt, txt + ' 복사');
     return;
   }
-  if(a === 'add'){
-    toggleCart(id < 0 ? D.nai[-id-1][0] : naiOf[id]);
-    return;
-  }
   if(a === 'rel'){
     if(!relReady){ toast('관련 태그 데이터를 아직 받는 중이에요'); return; }
     if(sideMode()){
       if(expanded === id){ closePanel(); }
-      else { expanded = id; expandedPos = pos; relFilter = null; drawSidePanel(); markExpanded(); }
+      else { expanded = id; expandedPos = pos; relFilter = null; panelH = 0;
+             drawSidePanel(); markExpanded(); }
       return;
     }
-    if(expanded === id){
-      expanded = -1; expandedPos = -1;
-      var p = row.querySelector('.relp'); if(p) p.remove();
-      row.classList.remove('exp');
-      act.classList.remove('on');
-      spacerEl.style.height = totalH() + 'px';
-      lastRange = [-1,-1]; renderWindow();
-    } else {
-      if(expanded >= 0){
-        var prev = pool.get(expandedPos);
-        if(prev){
-          var pp = prev.querySelector('.relp'); if(pp) pp.remove();
-          prev.classList.remove('exp');
-          var pb = prev.querySelector('.relbtn'); if(pb) pb.classList.remove('on');
-        }
-      }
-      expanded = id; expandedPos = pos; relFilter = null;
-      row.classList.add('exp'); act.classList.add('on');
-      row.insertAdjacentHTML('beforeend', relPanelHTML(id));
-      measureExpanded();
-    }
+    relFilter = null;
+    if(expanded === id) setInlinePanel(-1, -1, null);
+    else setInlinePanel(id, pos, row);
   }
 }
 
-/* ============================ cart ============================ */
-function loadCart(){
-  var v = LS.get('nai5.cart', []);
-  if(Array.isArray(v)) cart = v.filter(function(x){ return typeof x === 'string' && x; }).slice(0, 400);
-  cartSet = new Set(cart);
-  renderCart();
-}
-function saveCart(){ LS.set('nai5.cart', cart); }
-function toggleCart(tag){
-  if(cartSet.has(tag)){ cartSet.delete(tag); cart = cart.filter(function(x){ return x !== tag; }); toast(tag + ' 뺐습니다'); }
-  else { cartSet.add(tag); cart.push(tag); toast(tag + ' 담았습니다'); }
-  saveCart(); renderCart(); refreshAddStates();
-}
-function renderSideCart(){
-  var el = $('#sidecart');
-  if(!el) return;
-  var h = '<div class="scHead">담은 태그 <b>' + cart.length + '</b></div>';
-  h += '<div class="scBtns">' +
-       '<button class="cartbtn pri" data-sc="copy"' + (cart.length ? '' : ' disabled') + '>전체 복사</button>' +
-       '<button class="cartbtn gh" data-sc="clear"' + (cart.length ? '' : ' disabled') + '>비우기</button></div>';
-  if(cart.length){
-    h += '<div class="scList">';
-    for(var i=0;i<cart.length;i++)
-      h += '<span class="cchip"><span>' + esc(cart[i]) + '</span>' +
-           '<button data-del="' + esc(cart[i]) + '" aria-label="빼기">×</button></span>';
-    h += '</div>';
-  } else {
-    h += '<p class="scEmpty">태그의 <b>+ 담기</b>를 눌러 모아 두면 쉼표로 이어 한 번에 복사할 수 있어요.</p>';
+/* ---------- 관련 태그에서 본문 항목으로 이동 ---------- */
+/* 지금 걸린 검색·분류 때문에 목록에 없을 수 있다. 그럴 땐 조건을 풀어서라도
+   반드시 도달시킨다. 가상 스크롤이라 목표 행이 아직 안 그려져 있을 수 있어,
+   위쪽 행들의 추정 높이가 실측으로 바뀌며 위치가 흔들린다. 그래서 한 번에
+   보내지 않고 자리가 맞을 때까지 몇 번 좁혀 간다. */
+function gotoTag(mi){
+  if(!(mi >= 0) || mi >= N){ toast('이 태그는 목록에 없습니다'); return; }
+  if(!adultOn && isAdult(mi)){
+    toast('성인 태그입니다. 우측 상단 토글을 켜면 볼 수 있어요');
+    return;
   }
-  el.innerHTML = h;
-  el.onclick = function(e){
-    var d = e.target.closest('[data-del]'); if(d){ toggleCart(d.dataset.del); return; }
-    var b = e.target.closest('[data-sc]'); if(!b) return;
-    if(b.dataset.sc === 'copy' && cart.length) copyText(cart.join(', '), '태그 ' + cart.length + '개를 복사했습니다');
-    if(b.dataset.sc === 'clear' && cart.length){
-      cart = []; cartSet = new Set(); saveCart(); renderCart(); refreshAddStates(); toast('담은 태그를 비웠습니다');
-    }
-  };
+  var pos = results.indexOf(mi);
+  if(pos < 0){
+    S.cat = null; S.group = ''; S.topic = '';
+    S.q = D.n[mi];
+    $('#q').value = S.q;
+    $('#qclear').classList.add('on');
+    syncSelects();
+    apply();
+    pos = results.indexOf(mi);
+  }
+  if(pos < 0){ toast(D.n[mi] + ' 을(를) 목록에서 찾지 못했습니다'); return; }
+  if(!sideMode() && expanded >= 0) setInlinePanel(-1, -1, null);
+  scrollToPos(pos);
+  flashRow(pos);
+  toast(D.n[mi] + ' 로 이동했습니다');
 }
-function renderCart(){
-  renderSideCart();
-  $('#cartN').textContent = cart.length;
-  $('#cartCopy').disabled = cart.length === 0;
-  var h = '';
-  for(var i=0;i<cart.length;i++)
-    h += '<span class="cchip"><span>' + esc(cart[i]) + '</span><button data-del="' + esc(cart[i]) + '" aria-label="빼기">×</button></span>';
-  var cl = $('#cartList');
-  cl.innerHTML = h || '<span style="font-size:12px;color:var(--ink3);padding:4px 2px">아직 담은 태그가 없습니다. 각 태그의 <b>+ 담기</b>를 눌러 보세요.</span>';
-  cl.onclick = function(e){
-    var b = e.target.closest('[data-del]');
-    if(b) toggleCart(b.dataset.del);
-  };
-  if(!cart.length) document.body.classList.remove('cart-open');
+/* 목표 행이 화면 위쪽에 오도록. 실측으로 높이가 바뀌면 다시 계산한다. */
+function scrollToPos(pos){
+  var margin = 10;
+  for(var k = 0; k < 6; k++){
+    var vpTop = viewportEl.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo(0, Math.max(0, vpTop + offsetOf(pos) - margin));
+    lastRange = [-1,-1];
+    renderWindow();
+    var el = pool.get(pos);
+    if(!el) continue;
+    var off = el.getBoundingClientRect().top - margin;
+    if(Math.abs(off) < 2) return;
+  }
 }
-function refreshAddStates(){
-  pool.forEach(function(el){
-    var id = +el.dataset.id;
-    var tag = id < 0 ? D.nai[-id-1][0] : naiOf[id];
-    var b = el.querySelector('.act.add');
-    if(b){
-      var on = cartSet.has(tag);
-      b.classList.toggle('in', on);
-      b.textContent = on ? '✓ 담김' : '+ 담기';
-    }
-    var rads = el.querySelectorAll('[data-radd]');
-    for(var j=0;j<rads.length;j++){
-      var on2 = cartSet.has(rads[j].dataset.radd);
-      rads[j].classList.toggle('in', on2);
-      rads[j].textContent = on2 ? '✓' : '+';
-    }
-  });
+function flashRow(pos){
+  flashPos = pos;
+  var el = pool.get(pos);
+  if(el) el.classList.add('flash');
+  clearTimeout(flashRow._t);
+  flashRow._t = setTimeout(function(){
+    var e2 = pool.get(flashPos);
+    if(e2) e2.classList.remove('flash');
+    flashPos = -1;
+  }, 1600);
 }
 
+/* ===== 태그 모으기 기능은 없앴다. 관련 태그의 '이동' 버튼이 그 자리를 대신한다. ===== */
 /* ============================ go ============================ */
 window.__NAI5 = {
   get D(){ return D; }, get R(){ return R; }, get S(){ return S; },
@@ -1644,10 +1838,18 @@ window.__NAI5 = {
   posAtOffset: function(y){ return posAtOffset(y); },
   offsetOf: function(p){ return offsetOf(p); },
   get expandedPos(){ return expandedPos; },
+  get expanded(){ return expanded; },
+  get panelH(){ return panelH; },
+  heightAt: function(p){ return fenAt(p); },
+  baseAt: function(p){ return base ? base[p] : 0; },
+  gotoTag: gotoTag,
+  sideMode: sideMode,
+  get stage2Done(){ return rel2Done; },
+  get stage2Total(){ return rel2Total; },
+  get stage2Failed(){ return rel2Failed; },
   setGroup: function(g){ setGroup(g); apply(); return results.length; },
   setTopic: function(t){ setTopicSel(t); apply(); return results.length; },
   toCho: toCho, isChoQuery: isChoQuery,
-  get cart(){ return cart; },
   get ready(){ return !!(D && R && relReady && document.getElementById('loader').classList.contains('gone')); },
   get tagsReady(){ return !!(D && document.getElementById('loader').classList.contains('gone')); },
   get failed(){ return !!bootError; }
