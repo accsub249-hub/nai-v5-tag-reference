@@ -49,20 +49,25 @@ button{cursor:pointer;background:none;border:none;padding:0}
 /* ===================== 앱 셸 =====================
    좁은 화면: 위에서 아래로 쌓기. 넓은 화면: 좌측 조작부 고정 + 본문 + 관련 태그 옆칸.
    본문은 읽기 좋은 폭(최대 830px)으로 묶고, 남는 폭은 관련 태그 칸이 쓴다. */
+/* 상단 고정 바 하나 + 그 아래 목록. 좁은 화면과 넓은 화면이 같은 구조다. */
+.topbar{
+  position:sticky;top:0;z-index:50;background:rgba(255,255,255,.96);
+  backdrop-filter:blur(8px);border-bottom:1px solid var(--line);
+}
+.tbin{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  max-width:1420px;margin:0 auto;padding:8px 14px;
+}
+.brand{font-size:16px;margin:0;font-weight:800;letter-spacing:.4px;flex:0 0 auto;
+  color:var(--ink);white-space:nowrap}
 .shell{display:block;padding:0 12px}
-.side{background:var(--card);border-bottom:1px solid var(--line);
-  margin:0 -12px 2px;padding:14px 12px 0}
-.footwide{display:none}          /* 넓은 화면에서만 사이드바에 */
-.footnarrow{display:block}
-.sidein{max-width:1040px;margin:0 auto}
-.listcol{max-width:1040px;margin:0 auto}
+.listcol{max-width:920px;margin:0 auto}
 .aside{display:none}
-.hd-top{display:flex;align-items:center;gap:8px;padding:11px 0 8px;flex-wrap:wrap}
-.hd-top h1{font-size:16px;margin:0;font-weight:800;letter-spacing:.4px}
+.footnarrow{display:block}
 
 /* ===== 성인 태그 토글 — 다른 조작부와 같은 토큰을 쓴다 ===== */
 .adtog{
-  margin-left:auto;min-height:var(--ctl-h-sm);
+  flex:0 0 auto;min-height:var(--ctl-h);
   border:1px solid var(--ctl-bd);border-radius:var(--ctl-r-sm);background:var(--ctl-bg);
   font-size:var(--ctl-fs-sm);font-weight:600;color:var(--ink2);
   padding:0 var(--ctl-px-sm);display:inline-flex;align-items:center;gap:7px;white-space:nowrap;
@@ -105,12 +110,10 @@ button{cursor:pointer;background:none;border:none;padding:0}
 .adbtn.pri{flex:2 1 auto;background:var(--accent);border-color:var(--accent);color:#fff}
 .adbtn.pri:hover{background:#2f6fd8;border-color:#2f6fd8}
 @media (max-width:420px){ .adbtns{flex-direction:column-reverse} .adbtn{width:100%} }
-.sortwrap{display:flex;flex-direction:column;align-items:stretch;gap:5px;padding:0 0 9px}
-.sortwrap label{font-size:11.5px;color:var(--ink3);font-weight:600;padding-left:2px}
 
 /* ===== 큰 컨트롤: 검색창 · 분류 드롭다운 3단 · 정렬 =====
    높이·테두리·모서리·글자크기·여백을 모두 토큰으로 공유한다. */
-#q, .sortwrap select{
+#q, #sort{
   height:var(--ctl-h);
   border:1px solid var(--ctl-bd);
   border-radius:var(--ctl-r);
@@ -121,21 +124,21 @@ button{cursor:pointer;background:none;border:none;padding:0}
   width:100%;min-width:0;outline:none;
   font-family:inherit;line-height:1.2;
 }
-#q:hover, .sortwrap select:hover{border-color:var(--ctl-bd-hover)}
-#q:focus, .sortwrap select:focus{
+#q:hover, #sort:hover{border-color:var(--ctl-bd-hover)}
+#q:focus, #sort:focus{
   border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px var(--accent-weak);
 }
 /* 드롭다운: 화살표를 직접 그려 세 개 모두 같은 모양으로 */
-.sortwrap select{
+#sort{
   appearance:none;-webkit-appearance:none;cursor:pointer;
   padding-right:30px;
   background-image:url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%238a94a3' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat:no-repeat;background-position:right 11px center;
 }
-.sortwrap select.on{
+#sort.on{
   border-color:#b9d0ff;background-color:var(--accent-weak);color:var(--accent-ink);font-weight:600;
 }
-.cathelp{font-size:11.5px;line-height:1.55;color:var(--ink3);margin:0;padding:0 0 9px;display:none}
+.cathelp{font-size:11.5px;line-height:1.55;color:var(--ink3);margin:0;padding:10px var(--pad-x) 0;display:none}
 .cathelp.on{display:block}
 
 /* ===== 분류 탭 3개 + 펼침 목록 =====
@@ -207,30 +210,25 @@ button{cursor:pointer;background:none;border:none;padding:0}
   .ftab{padding:0 6px 0 7px;gap:4px}
   .ftab .fn{display:none}
 }
-/* 넓은 화면: 조작부가 262px 좌측 기둥으로 들어가므로 탭을 세로로 쌓는다.
-   같은 부품·같은 상태 표시를 쓰고 방향만 바꾼다. */
+/* 상단 바 안에서는 탭 3개가 가로로 들어간다 — 좁은 화면과 같은 모양 */
 @media (min-width:900px){
-  .ftabs{grid-template-columns:1fr;gap:5px}
-  .ftab{min-height:46px}
-  .ftab .fn{margin-left:auto;padding-right:2px}
-  .ftab .ft{flex:0 1 auto}
-  .fpanel{position:absolute;left:0;right:0;top:100%;margin-top:6px;z-index:40}
-  .fwrap{padding-bottom:12px}
+  .ftab{min-height:44px}
+  .fpanel{position:absolute;left:0;right:0;top:100%;margin-top:7px;z-index:60}
+  .fwrap{padding-bottom:0}
 }
-/* 좁은 화면: 검색창과 성인 토글만 위에 붙여 둔다 (자주 쓰고 높이가 낮다) */
+/* 좁은 화면: 바가 세 줄로 접힌다. 높이를 아끼려고 브랜드 줄을 낮게 잡는다. */
 @media (max-width:899px){
-  .searchrow{position:sticky;top:0;z-index:30;background:var(--card);
-    margin:0 -12px;padding:8px 12px;border-bottom:1px solid var(--line2)}
-  .side{padding-top:0}
-  .hd-top{padding:11px 0 8px}
+  .tbin{padding:7px 12px 9px;gap:7px}
+  .brand{flex:0 0 auto;font-size:15px}
+  .sbox{flex:1 1 180px;order:2}
+  .adtog{order:3}
+  .fwrap{order:4;flex:1 1 100%;position:relative}
+  #sort{order:5;flex:1 1 100%}
 }
+@media (max-width:479px){ .adtog .lbl{display:none} }
 
 /* 검색창 */
-.searchrow{display:flex;gap:7px;align-items:center;padding:0 0 8px}
-#togslotN{display:contents}
-.searchrow .adtog{margin-left:0;flex:0 0 auto;min-height:var(--ctl-h);padding:0 8px}
-@media (max-width:479px){ .searchrow .adtog .lbl{display:none} }
-.sbox{flex:1;position:relative;display:flex;align-items:center;min-width:0}
+.sbox{flex:1 1 auto;position:relative;display:flex;align-items:center;min-width:0}
 .sbox svg{position:absolute;left:12px;width:16px;height:16px;flex:0 0 auto;
   fill:none;stroke:var(--ink3);stroke-width:2;pointer-events:none}
 #q{padding-left:34px;padding-right:38px}
@@ -240,37 +238,36 @@ button{cursor:pointer;background:none;border:none;padding:0}
 #qclear.on{display:flex}
 #qclear:hover{background:var(--line2);color:var(--ink)}
 
-/* ===================== 넓은 화면 레이아웃 =====================
-   900px+ : 좌측 고정 조작부 + 본문(읽기 좋은 폭)
-   1360px+ : 관련 태그를 펼치면 우측 옆칸이 열린다 */
+/* ===================== 넓은 화면 =====================
+   좌측 사이드바를 없애고 상단 바 하나로 통일했다. 조작부가 가로로 펼쳐지니
+   탭 3개가 나란히 들어가고, 목록은 읽기 좋은 폭으로 가운데 정렬된다.
+   1360px+ 에서는 관련 태그를 옆칸에 띄운다 — 행 높이를 바꾸지 않아
+   가상 스크롤이 훨씬 안정적이라, 이 구조에서도 그대로 둔다. */
 @media (min-width:900px){
   body{padding-bottom:28px}
-  .shell{
-    display:grid;gap:0 30px;align-items:start;
-    grid-template-columns:262px minmax(0,830px);
-    justify-content:center;max-width:1560px;margin:0 auto;padding:0 26px;
-  }
-  .side{
-    position:sticky;top:0;height:100vh;overflow-y:auto;overscroll-behavior:contain;
-    background:none;border:0;margin:0;padding:22px 0 20px;z-index:1;
-  }
-  /* 그리드 아이템에 margin:auto 가 남아 있으면 stretch 대신 내용 폭으로 줄어든다 */
-  .sidein{max-width:none;margin:0;width:100%}
-  .listcol{max-width:none;margin:0;width:100%;justify-self:stretch;padding-top:22px;min-width:0}
-  :root{--pad-x:22px;--pad-y:18px;--measure:700px}   /* 넓은 화면에서만 읽기 폭 제한 */
-  .sidein{padding-right:18px}
-  .hd-top{padding:0 0 14px}
-  .hd-top h1{font-size:19px}
-  .sortwrap{padding:2px 0 12px}
-  .footwide{display:block}
-  .footnarrow{display:none}
+  :root{--pad-x:22px;--pad-y:18px;--measure:720px}   /* 설명은 읽기 좋은 길이에서 끊는다 */
+  .tbin{flex-wrap:nowrap;padding:9px 20px;gap:10px}
+  .brand{font-size:17px}
+  .sbox{flex:1 1 210px;min-width:170px;max-width:340px}
+  .fwrap{flex:2 1 460px;min-width:330px}
+  #sort{flex:0 0 auto;width:132px}
+  .shell{max-width:1420px;margin:0 auto;padding:0 20px}
+  .listcol{max-width:920px;margin:0 auto;min-width:0}
   footer{margin-top:18px;padding:12px 0 0;border-top:1px solid var(--line2)}
 }
 @media (min-width:1360px){
-  body.haspanel .shell{grid-template-columns:262px minmax(0,830px) minmax(340px,430px)}
-  body.haspanel .aside{display:block;position:sticky;top:22px;max-height:calc(100vh - 44px);
-    overflow-y:auto;overscroll-behavior:contain;padding:22px 0 20px}
+  body.haspanel .shell{
+    display:grid;gap:0 26px;align-items:start;
+    grid-template-columns:minmax(0,920px) minmax(330px,420px);
+    justify-content:center;
+  }
+  body.haspanel .listcol{margin:0;width:100%;justify-self:stretch}
+  body.haspanel .aside{display:block;position:sticky;top:calc(var(--tbh, 62px) + 14px);
+    max-height:calc(100vh - var(--tbh, 62px) - 28px);
+    overflow-y:auto;overscroll-behavior:contain;padding:16px 0 20px}
 }
+/* 탭이 좁아지는 구간에서는 개수를 접는다 */
+@media (min-width:900px) and (max-width:1199px){ .ftab .fn{display:none} }
 
 /* ===== 작은 컨트롤: 버튼 · 토글 · 칩 — 같은 계열로 ===== */
 .act, .tog, .seg button, .relfil .rf, .rgo{
@@ -311,7 +308,6 @@ button{cursor:pointer;background:none;border:none;padding:0}
 .seg button.on:hover{background:var(--accent)}
 
 /* ---------- status ---------- */
-#togslot{display:contents}
 .statusbar{display:flex;align-items:center;justify-content:space-between;gap:10px;
   padding:10px var(--pad-x) 9px;flex-wrap:wrap}
 .count{font-size:12.5px;color:var(--ink2);font-variant-numeric:tabular-nums}
@@ -521,25 +517,20 @@ footer a:hover{color:var(--ink2)}
   <div id="lbar"><i></i></div>
 </div>
 
-<div class="shell">
-
-<aside class="side">
-  <div class="sidein">
-    <div class="hd-top">
-      <h1>BOORU V5</h1>
-      <button class="adtog" id="adTog" role="switch" aria-checked="false">
-        <span class="badge">18+</span><span class="lbl">성인 태그</span><span class="sw"></span>
-      </button>
+<!-- 상단 고정 조작 바 — 좁은 화면과 넓은 화면이 같은 구조를 쓴다.
+     넓은 화면에서는 한 줄에 다 들어가고, 좁아지면 줄바꿈된다. -->
+<header class="topbar" id="topbar">
+  <div class="tbin">
+    <h1 class="brand">BOORU V5</h1>
+    <div class="sbox">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input id="q" type="search" autocomplete="off" autocorrect="off" spellcheck="false"
+             placeholder="태그 · 한글명 · 초성으로 검색" enterkeyhint="search">
+      <button id="qclear" aria-label="검색어 지우기">×</button>
     </div>
-    <div class="searchrow" id="searchrow">
-      <div class="sbox">
-        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-        <input id="q" type="search" autocomplete="off" autocorrect="off" spellcheck="false"
-               placeholder="태그 · 한글명 · 초성으로 검색" enterkeyhint="search">
-        <button id="qclear" aria-label="검색어 지우기">×</button>
-      </div>
-      <span id="togslotN"></span>
-    </div>
+    <button class="adtog" id="adTog" role="switch" aria-checked="false">
+      <span class="badge">18+</span><span class="lbl">성인 태그</span><span class="sw"></span>
+    </button>
     <!-- 대 → 중 → 소 분류: 가로 탭 3개. 누르면 바로 아래로 목록이 펼쳐진다. -->
     <div class="fwrap">
       <div class="ftabs" id="ftabs">
@@ -564,21 +555,16 @@ footer a:hover{color:var(--ink2)}
       </div>
       <div class="fpanel" id="fpanel" hidden></div>
     </div>
-    <p class="cathelp" id="cathelp"></p>
-    <div class="sortwrap">
-      <label for="sort">정렬</label>
-      <select id="sort"></select>
-    </div>
-    <footer class="footwide">
-      <p>게시물 수 <a href="https://huggingface.co/datasets/HDiffusion/historical-danbooru-tag-counts" target="_blank" rel="noopener noreferrer">HDiffusion/historical-danbooru-tag-counts</a> (Apache-2.0) · <a href="https://github.com/DraconicDragon/dbr-e621-lists-archive" target="_blank" rel="noopener noreferrer">DraconicDragon/dbr-e621-lists-archive</a> · 설명·위키 <a href="https://danbooru.donmai.us" target="_blank" rel="noopener noreferrer">danbooru.donmai.us</a> · 한글 데이터 <a href="https://arca.live/b/aiart/141288889" target="_blank" rel="noopener noreferrer">단보루 태그툴</a> (알에이치플러스)</p>
-      <p class="sitenote">이 사이트는 태그 자료만 제공하며 이미지를 포함하지 않습니다. 외부 링크는 성인 콘텐츠가 포함된 단부루로 연결됩니다.</p>
-    </footer>
+    <select id="sort" aria-label="정렬"></select>
   </div>
-</aside>
+</header>
+
+<div class="shell">
 
 <main class="listcol">
   <div id="relstatus"></div>
-  <div class="statusbar"><div class="count" id="count">—</div><span id="togslot"></span></div>
+  <p class="cathelp" id="cathelp"></p>
+  <div class="statusbar"><div class="count" id="count">—</div></div>
   <div id="notice" class="noticewrap"></div>
   <div id="viewport"><div id="spacer"><div id="rows"></div></div></div>
   <div id="empty" class="empty" style="display:none"></div>
@@ -1049,9 +1035,7 @@ function buildUI(){
 
 
   // 성인 태그 토글 — 켤 때만 동의 확인, 끌 때는 바로
-  placeAdultToggle();
   syncAdultToggle();
-  if(wideMQ && wideMQ.addEventListener) wideMQ.addEventListener('change', placeAdultToggle);
   $('#adTog').addEventListener('click', function(){
     if(adultOn){ setAdult(false); return; }
     openAdultModal();
@@ -1104,19 +1088,25 @@ function buildUI(){
     measureCPL(); layout(true);
   });
   measureCPL();
+  measureTopbar();
+  window.addEventListener('resize', measureTopbar, {passive:true});
+}
+/* 옆칸(관련 태그)이 상단 바 아래에 붙도록 바 높이를 CSS 변수로 넘긴다 */
+function measureTopbar(){
+  var tb = document.getElementById('topbar');
+  if(!tb) return;
+  var h = Math.round(tb.getBoundingClientRect().height);
+  if(h) document.documentElement.style.setProperty('--tbh', h + 'px');
+}
+function topbarH(){
+  var tb = document.getElementById('topbar');
+  if(!tb) return 0;
+  var cs = window.getComputedStyle(tb);
+  return cs.position === 'sticky' ? Math.round(tb.getBoundingClientRect().height) : 0;
 }
 
 /* ---------- 성인 태그 토글 ---------- */
-/* 좁은 화면에서는 제목 줄 오른쪽, 넓은 화면에서는 조작부가 왼쪽 기둥으로 빠지므로
-   본문 위 상태줄 오른쪽(= 화면 우측 상단)으로 옮겨 둔다. */
-var wideMQ = window.matchMedia ? window.matchMedia('(min-width:900px)') : null;
-function placeAdultToggle(){
-  var t = $('#adTog'), wideSlot = $('#togslot'), narrowSlot = $('#togslotN');
-  if(!t || !wideSlot || !narrowSlot) return;
-  var wide = wideMQ ? wideMQ.matches : window.innerWidth >= 900;
-  var want = wide ? wideSlot : narrowSlot;   // 좁은 화면에선 검색창과 함께 위에 붙어 있는다
-  if(t.parentNode !== want) want.appendChild(t);
-}
+/* 조작부가 상단 바 하나로 합쳐져서, 토글도 자리를 옮길 일이 없어졌다. */
 function syncAdultToggle(){
   var t = $('#adTog');
   if(!t) return;
@@ -2132,7 +2122,7 @@ function gotoTag(mi){
 }
 /* 목표 행이 화면 위쪽에 오도록. 실측으로 높이가 바뀌면 다시 계산한다. */
 function scrollToPos(pos){
-  var margin = 10;
+  var margin = topbarH() + 10;      // 고정 바에 가려지지 않게
   for(var k = 0; k < 6; k++){
     var vpTop = viewportEl.getBoundingClientRect().top + window.scrollY;
     window.scrollTo(0, Math.max(0, vpTop + offsetOf(pos) - margin));
