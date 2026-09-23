@@ -224,6 +224,7 @@ button{cursor:pointer;background:none;border:none;padding:0}
 .seg button.on:hover{background:var(--accent)}
 
 /* ---------- status ---------- */
+#togslot{display:contents}
 .statusbar{display:flex;align-items:center;justify-content:space-between;gap:10px;
   padding:10px var(--pad-x) 9px;flex-wrap:wrap}
 .count{font-size:12.5px;color:var(--ink2);font-variant-numeric:tabular-nums}
@@ -461,7 +462,7 @@ footer a:hover{color:var(--ink2)}
 
 <main class="listcol">
   <div id="relstatus"></div>
-  <div class="statusbar"><div class="count" id="count">—</div></div>
+  <div class="statusbar"><div class="count" id="count">—</div><span id="togslot"></span></div>
   <div id="notice" class="noticewrap"></div>
   <div id="viewport"><div id="spacer"><div id="rows"></div></div></div>
   <div id="empty" class="empty" style="display:none"></div>
@@ -916,7 +917,9 @@ function buildUI(){
 
 
   // 성인 태그 토글 — 켤 때만 동의 확인, 끌 때는 바로
+  placeAdultToggle();
   syncAdultToggle();
+  if(wideMQ && wideMQ.addEventListener) wideMQ.addEventListener('change', placeAdultToggle);
   $('#adTog').addEventListener('click', function(){
     if(adultOn){ setAdult(false); return; }
     openAdultModal();
@@ -952,6 +955,16 @@ function buildUI(){
 }
 
 /* ---------- 성인 태그 토글 ---------- */
+/* 좁은 화면에서는 제목 줄 오른쪽, 넓은 화면에서는 조작부가 왼쪽 기둥으로 빠지므로
+   본문 위 상태줄 오른쪽(= 화면 우측 상단)으로 옮겨 둔다. */
+var wideMQ = window.matchMedia ? window.matchMedia('(min-width:900px)') : null;
+function placeAdultToggle(){
+  var t = $('#adTog'), slot = $('#togslot'), head = $('.hd-top');
+  if(!t || !slot || !head) return;
+  var wide = wideMQ ? wideMQ.matches : window.innerWidth >= 900;
+  var want = wide ? slot : head;
+  if(t.parentNode !== want) want.appendChild(t);
+}
 function syncAdultToggle(){
   var t = $('#adTog');
   if(!t) return;
