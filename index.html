@@ -812,7 +812,9 @@ var expandedPos = -1;                               // 그 태그의 목록 위�
 /* 키에 v2 를 붙여, 예전 버전에서 저장된 '빈도순' 설정이 새 기본값을 덮어쓰지 않게 한다. */
 var relOpts = {
   sort: LS.get('nai5.v2.relsort','cos'),     // 기본: 연관도(코사인)순
-  hide: LS.get('nai5.v2.relhide', true),
+  /* 기본은 꺼짐 — 관련 태그가 태그당 200개까지 들어와 다 보여 주는 편이 낫다.
+     이미 켜 둔 사람은 저장값이 있으므로 그대로 존중된다. */
+  hide: LS.get('nai5.v2.relhide', false),
   grp:  LS.get('nai5.v2.relgrp', true)       // 기본: 분류별 그룹 보기
 };
 /* 패널 안에서 고른 분류(그룹). null = 전체. 다른 태그를 펼치면 초기화된다. */
