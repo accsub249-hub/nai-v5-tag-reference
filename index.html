@@ -933,7 +933,27 @@ function buildUI(){
   });
 
   window.addEventListener('scroll', onScroll, {passive:true});
-  window.addEventListener('resize', function(){ measureCPL(); layout(true); }, {passive:true});
+  /* 모바일 브라우저는 주소창이 나타났다 사라질 때마다 resize 를 쏜다.
+     (실측: 안드로이드 크롬에서 innerHeight 805 ↔ 701, 폭은 411 그대로)
+     높이만 바뀐 경우 행의 줄바꿈은 그대로라 높이를 다시 잴 이유가 없다.
+     그런데 예전에는 여기서 무조건 layout(true) 를 불러 높이 모델을 통째로
+     새로 짰고, 그 과정에서 펼쳐둔 패널 높이까지 0 이 됐다. 폭이 바뀐 때만 다시 짠다. */
+  lastVPW = viewportEl.clientWidth;
+  window.addEventListener('resize', function(){
+    var w = viewportEl.clientWidth;
+    if(w === lastVPW){ markMoving(320); if(results.length) renderWindow(); return; }
+    lastVPW = w;
+    hCache.clear();                       // 폭이 바뀌면 줄바꿈이 달라져 실측값을 못 믿는다
+    measureCPL(); layout(true, true);     // 펼쳐둔 패널 높이는 유지
+  }, {passive:true});
+  /* 주소창이 접히는 동안 visualViewport 가 60여 단계로 연속 변한다. 그 사이에는
+     보정을 미룬다. */
+  if(window.visualViewport){
+    window.visualViewport.addEventListener('resize', function(){ markMoving(320); });
+  }
+  window.addEventListener('touchstart', function(){ markMoving(400); }, {passive:true});
+  window.addEventListener('touchmove',  function(){ markMoving(400); }, {passive:true});
+  window.addEventListener('touchend',   function(){ markMoving(400); }, {passive:true});
   document.getElementById('rows').addEventListener('click', onRowClick);
   $('#sidepanel').addEventListener('click', function(e){
     if(e.target.closest('[data-spclose]')){ closePanel(); return; }
@@ -1263,6 +1283,7 @@ var fen = null, fenN = 0;
 var base = null, measured = null;
 var panelH = 0;                // 펼쳐진 패널이 더하는 높이 (없으면 0)
 var cpl = 44;                  // 설명 한 줄에 들어가는 대략 글자 수
+var lastVPW = 0;               // 마지막으로 본 목록 폭 (높이만 바뀐 resize 를 걸러낸다)
 var flashPos = -1;             // '이동'으로 막 도착한 행 (잠깐 강조)
 
 function fenBuild(vals){
@@ -1313,15 +1334,27 @@ function estH(id){
   if(k) h += Math.max(1, Math.ceil((k.length + 5) / cpl)) * 19;
   return h;
 }
-function buildHeights(){
+/* 한 번 실측한 접힌 높이는 태그 id 로 기억해 둔다. 검색·필터로 목록이 다시
+   짜여도 추정값으로 되돌아가지 않으므로, 나중에 한꺼번에 정정되며 튀는 일이 준다.
+   폭이 바뀌면 줄바꿈이 달라지므로 그때는 비운다. */
+var hCache = new Map();
+function buildHeights(keepPanel){
   measureCPL();
   var n = results.length;
   base = new Float64Array(n);
   measured = new Uint8Array(n);
-  for(var i=0;i<n;i++) base[i] = estH(results[i]);
-  panelH = 0;                                   // 목록이 새로 짜이면 패널도 닫힌다
+  for(var i=0;i<n;i++){
+    var id = results[i], c = hCache.get(id);
+    if(c > 0){ base[i] = c; measured[i] = 1; }
+    else base[i] = estH(id);
+  }
+  /* 펼쳐진 패널은 목록이 다시 짜여도 그대로 열려 있다. 여기서 0 으로 지우면
+     그 행이 화면 밖에 있는 동안 트리가 712px 만큼 틀어지고, 다시 그려지는
+     순간 한꺼번에 정정되면서 화면이 크게 튄다. (모바일 튐의 주범이었다) */
+  if(!keepPanel) panelH = 0;
   var v = new Float64Array(n);
   v.set(base);
+  if(keepPanel && panelH > 0 && expandedPos >= 0 && expandedPos < n) v[expandedPos] += panelH;
   fenBuild(v);
 }
 /* 트리에 들어가 있어야 할 값 */
@@ -1338,8 +1371,8 @@ function clearPool(){
   pool.clear(); lastRange = [-1,-1];
 }
 
-function layout(reset){
-  if(reset){ clearPool(); buildHeights(); }
+function layout(reset, keepPanel){
+  if(reset){ clearPool(); buildHeights(keepPanel); }
   var emptyEl = $('#empty');
   if(!results.length){
     spacerEl.style.height = '0px';
@@ -1384,14 +1417,18 @@ function remeasure(from, to, anchorPos){
       var ph = pe ? measH(pe) : 0;
       if(ph){ panelH = ph; b = real - ph; }
     }
-    var was = base[p], wasMeasured = measured[p];
+    var was = base[p], wasMeasured = measured[p], wasH = fenAt(p);
     if(b > 0 && Math.abs(b - base[p]) > 0.5) base[p] = b;
     measured[p] = 1;
+    if(base[p] > 0) hCache.set(results[p], base[p]);     // 다음 목록 재구성 때 재사용
     if(syncH(p)){
       changed = true;
       if(log) log.push({ p: p, from: Math.round(was * 10) / 10, to: Math.round(base[p] * 10) / 10,
                          rel: p < anchorPos ? 'ABOVE' : (p === anchorPos ? 'anchor' : 'below'),
-                         fresh: !wasMeasured });
+                         fresh: !wasMeasured,
+                         /* 트리 높이가 실제로 얼마나 움직였는지 — 패널 몫 포함 */
+                         dH: Math.round(fenAt(p) - wasH),
+                         ph: p === expandedPos ? Math.round(panelH) : 0 });
     }
   }
   if(log && log.length) DBG.meas(log);
@@ -1401,7 +1438,31 @@ function remeasure(from, to, anchorPos){
 /* 화면 위쪽(앵커보다 앞) 행의 높이가 바뀌면 그만큼 스크롤을 밀어 줘야 보고 있던
    자리가 그대로 있는다. 앵커 아래쪽 변화는 눈에 보이는 위치를 바꾸지 않으므로
    건드리지 않는다. */
-var pendDelta = 0, pendTimer = null;
+/* 손가락이 닿아 있거나 관성이 돌거나 주소창이 여닫히는 중에 스크롤 위치를 건드리면,
+   안드로이드 크롬은 스크롤을 컴포지터에서 굴리고 있어서 그대로 툭 튄 것처럼 보인다.
+   실측 로그에서 보정 38회가 전부 터치 중(22) 아니면 관성 중(16)이었다.
+   그래서 움직임이 멎을 때까지 미뤄 두고 한 번에 정리한다. */
+var moveUntil = 0, pendDelta = 0, pendTimer = null;
+function markMoving(ms){
+  var t = Date.now() + (ms || 220);
+  if(t > moveUntil) moveUntil = t;
+  if(!pendTimer && pendDelta) scheduleFlush();
+}
+function moving(){ return Date.now() < moveUntil; }
+function scheduleFlush(){
+  if(pendTimer) clearTimeout(pendTimer);
+  pendTimer = setTimeout(flushComp, Math.max(20, moveUntil - Date.now() + 20));
+}
+function flushComp(){
+  pendTimer = null;
+  if(moving()){ scheduleFlush(); return; }
+  var d = pendDelta; pendDelta = 0;
+  if(!d) return;
+  var y = window.scrollY;
+  if(y <= 0) return;
+  window.scrollTo(0, Math.max(0, y + d));
+  if(DBG) DBG.comp(d, -1, 'flush');
+}
 function compensate(anchorPos, anchorBefore){
   spacerEl.style.height = totalH() + 'px';
   var delta = fenSum(anchorPos) - anchorBefore;
@@ -1410,18 +1471,12 @@ function compensate(anchorPos, anchorBefore){
   if(y <= 0) return 0;
 
   if(DBG && DBG.opt.A){ DBG.comp(delta, anchorPos, 'OFF'); return 0; }
-  if(DBG && DBG.opt.B){
-    /* B: 관성 스크롤 중에 scrollTo 를 부르면 스크롤이 끊기며 튄 것처럼 보인다.
-          스크롤이 멎은 뒤로 미룬다. */
+
+  /* B 옵션은 진단용으로 옛 방식(움직이는 중에도 즉시 보정)을 되살린다 */
+  if(moving() && !(DBG && DBG.opt.B)){
     pendDelta += delta;
-    if(pendTimer) clearTimeout(pendTimer);
-    pendTimer = setTimeout(function(){
-      var d = pendDelta; pendDelta = 0; pendTimer = null;
-      if(!d) return;
-      var yy = window.scrollY;
-      if(yy > 0){ window.scrollTo(0, Math.max(0, yy + d)); if(DBG) DBG.comp(d, anchorPos, 'LATE'); }
-    }, 200);
-    DBG.comp(delta, anchorPos, 'queue');
+    scheduleFlush();
+    if(DBG) DBG.comp(delta, anchorPos, 'defer');
     return 0;
   }
   window.scrollTo(0, Math.max(0, y + delta));    // scrollBy 는 관성 스크롤과 겹치면 누적된다
@@ -1456,11 +1511,12 @@ function renderWindow(){
   pool.forEach(function(el, pos){ el.style.transform = 'translateY(' + offsetOf(pos) + 'px)'; });
   lastRange = [first, last];
   if(DBG) DBG.render({ y: window.scrollY, top: top, first: first, last: last, anchor: anchorPos,
-                       built: built, dropped: drop.length, ih: window.innerHeight,
+                       built: built, dropped: drop.length, ih: window.innerHeight, vpw: lastVPW,
                        panelH: Math.round(panelH), expPos: expandedPos });
 }
 var scrollPending = false;
 function onScroll(){
+  markMoving(200);                 // 스크롤이 도는 동안에는 위치 보정을 미룬다
   if(scrollPending) return;
   scrollPending = true;
   var run = function(){
