@@ -7,7 +7,13 @@
 <title>[진단] BOORU V5</title>
 <style>
 :root{
-  --bg:#f4f6f9; --card:#ffffff; --line:#e2e6ec; --line2:#eef1f5;
+  --bg:#eef2f7; --card:#ffffff; --line:#e2e6ec; --line2:#eef1f5;
+  /* ===== 카드 토큰 ===== */
+  --card-r:14px;                 /* 카드 모서리 */
+  --card-bd:#e9eef5;             /* 아주 옅은 테두리 */
+  --card-sh:0 1px 2px rgba(22,34,52,.04), 0 4px 14px rgba(22,34,52,.05);
+  --card-px:18px; --card-py:16px;
+  --sub-bg:#f6f9fd;              /* 카드 안 보조 영역 (관련 태그 패널) */
   --ink:#16202c; --ink2:#5a6676; --ink3:#8a94a3;
   --accent:#2f6df0; --accent-weak:#e8f0ff; --accent-ink:#1b4fbd;
   --ok:#0f8a5f; --warn:#b4560a; --warn-bg:#fff5e8; --warn-line:#f3d9b8;
@@ -144,7 +150,7 @@ button{cursor:pointer;background:none;border:none;padding:0}
 /* ===== 분류 탭 3개 + 펼침 목록 =====
    드롭다운 3단이 세로로 쌓이던 걸 가로 한 줄로 바꿨다. 탭마다 아이콘·현재 선택·
    개수를 같이 보여 주고, 누르면 화면을 덮지 않고 바로 아래로 목록이 열린다. */
-.fwrap{position:relative;padding:0 0 9px}
+.fwrap{position:relative}
 .ftabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
 .ftab{
   min-height:52px;display:flex;align-items:center;gap:6px;text-align:left;
@@ -173,8 +179,9 @@ button{cursor:pointer;background:none;border:none;padding:0}
 .ftab[aria-expanded="true"]{box-shadow:0 0 0 2px rgba(58,124,225,.28)}
 
 .fpanel{
-  margin-top:7px;background:var(--card);border:1px solid var(--line);border-radius:var(--ctl-r);
-  box-shadow:0 6px 20px rgba(16,26,40,.13);overflow:hidden;
+  position:absolute;left:0;right:0;top:100%;margin-top:7px;z-index:60;
+  background:var(--card);border:1px solid var(--line);border-radius:var(--ctl-r);
+  box-shadow:0 8px 24px rgba(16,26,40,.16);overflow:hidden;
 }
 .fpanel[hidden]{display:none}
 .fphead{display:flex;align-items:center;gap:7px;padding:9px 11px 8px;border-bottom:1px solid var(--line2);
@@ -213,30 +220,31 @@ button{cursor:pointer;background:none;border:none;padding:0}
 /* 상단 바 안에서는 탭 3개가 가로로 들어간다 — 좁은 화면과 같은 모양 */
 @media (min-width:900px){
   .ftab{min-height:44px}
-  .fpanel{position:absolute;left:0;right:0;top:100%;margin-top:7px;z-index:60}
-  .fwrap{padding-bottom:0}
 }
-/* 좁은 화면: 바가 세 줄로 접힌다. 높이를 아끼려고 브랜드 줄을 낮게 잡는다. */
-@media (max-width:899px){
-  .tbin{padding:7px 12px 9px;gap:7px}
-  .brand{flex:0 0 auto;font-size:15px}
-  .sbox{flex:1 1 180px;order:2}
-  .adtog{order:3}
-  .fwrap{order:4;flex:1 1 100%;position:relative}
-  #sort{order:5;flex:1 1 100%}
-}
-@media (max-width:479px){ .adtog .lbl{display:none} }
-
 /* 검색창 */
 .sbox{flex:1 1 auto;position:relative;display:flex;align-items:center;min-width:0}
 .sbox svg{position:absolute;left:12px;width:16px;height:16px;flex:0 0 auto;
   fill:none;stroke:var(--ink3);stroke-width:2;pointer-events:none}
-#q{padding-left:34px;padding-right:38px}
+#q{padding-left:34px;padding-right:38px;min-width:0}   /* flex 안에서 줄어들 수 있게 */
 @media (max-width:899px){ #q{font-size:16px} }   /* iOS 확대 방지 */
 #qclear{position:absolute;right:5px;width:30px;height:30px;border-radius:var(--ctl-r-sm);
   color:var(--ink3);font-size:18px;line-height:1;display:none;align-items:center;justify-content:center}
 #qclear.on{display:flex}
 #qclear:hover{background:var(--line2);color:var(--ink)}
+
+/* 좁은 화면: 바가 세 줄로 접힌다. 높이를 아끼려고 브랜드 줄을 낮게 잡는다. */
+@media (max-width:899px){
+  /* 고정 바는 두 줄까지만 — 실측으로 네 줄이면 화면의 34%를 먹었다.
+     정렬은 상태줄로 내려보낸다 (자주 쓰지 않고, 바로 아래에 그대로 있다). */
+  .tbin{padding:7px 12px 8px;gap:7px}
+  .brand{flex:0 0 auto;font-size:14px;order:1}
+  .sbox{flex:1 1 90px;min-width:90px;order:2}
+  .adtog{order:3;padding:0 7px}
+  .fwrap{order:4;flex:1 1 100%}
+  .ftab{min-height:46px}
+}
+@media (max-width:479px){ .adtog .lbl{display:none} }
+
 
 /* ===================== 넓은 화면 =====================
    좌측 사이드바를 없애고 상단 바 하나로 통일했다. 조작부가 가로로 펼쳐지니
@@ -299,19 +307,23 @@ button{cursor:pointer;background:none;border:none;padding:0}
   border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
 
 /* 세그먼트 (연관도순/빈도순, 분류별/전체) — 한 덩어리로 보이게 */
-.seg{display:inline-flex;border:1px solid var(--ctl-bd);border-radius:var(--ctl-r-sm);
-  overflow:hidden;background:var(--ctl-bg)}
-.seg button{border:0;border-radius:0;background:none;min-height:30px}
-.seg button + button{border-left:1px solid var(--ctl-bd)}
-.seg button.on{background:var(--accent);color:#fff}
-.seg button:hover{border-color:transparent;background:var(--line2)}
+.seg{display:inline-flex;gap:2px;background:#e8eef7;border:0;border-radius:999px;padding:3px}
+.seg button{border:0;border-radius:999px;background:none;min-height:28px;padding:0 11px;
+  font-size:11.5px;font-weight:700;color:var(--ink2)}
+.seg button + button{border-left:0}
+.seg button.on{background:var(--accent);color:#fff;box-shadow:0 1px 3px rgba(47,109,240,.3)}
+.seg button:hover{background:rgba(255,255,255,.75);border-color:transparent}
 .seg button.on:hover{background:var(--accent)}
 
 /* ---------- status ---------- */
-.statusbar{display:flex;align-items:center;justify-content:space-between;gap:10px;
+#sortslot{display:contents}
+@media (max-width:899px){ .statusbar #sort{width:auto;min-width:132px;max-width:56%;min-height:var(--ctl-h-sm);font-size:var(--ctl-fs-sm)} }
+.statusbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
   padding:10px var(--pad-x) 9px;flex-wrap:wrap}
-.count{font-size:12.5px;color:var(--ink2);font-variant-numeric:tabular-nums}
-.count b{color:var(--ink);font-weight:700}
+.count{font-size:12px;color:var(--ink3);font-variant-numeric:tabular-nums;margin-left:auto;order:2}
+.sortlab{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--ink2);order:1}
+.sortlab svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:.7}
+.count b{color:var(--ink2);font-weight:700}
 
 /* ---------- notices ---------- */
 .noticewrap{padding:0 var(--pad-x)}
@@ -339,57 +351,58 @@ button{cursor:pointer;background:none;border:none;padding:0}
 #spacer{position:relative;width:100%}
 #rows{position:absolute;top:0;left:0;right:0}
 /* ---- 행: 카드가 아니라 왼쪽 정렬 텍스트 블록 ---- */
-.row{
-  position:absolute;left:0;right:0;background:var(--card);
-  border-bottom:1px solid var(--line);
-  padding:var(--pad-y) var(--pad-x);
+/* 행은 자리만 잡고, 보이는 것은 안쪽 흰 카드다.
+   관련 태그 패널도 이 카드 안에 들어간다. */
+.row{position:absolute;left:0;right:0;padding:0 var(--pad-x) 10px}
+.rcard{
+  background:var(--card);border:1px solid var(--card-bd);border-radius:var(--card-r);
+  box-shadow:var(--card-sh);padding:var(--card-py) var(--card-px);
 }
 .row.exp{z-index:2}
+.row.exp .rcard{border-color:#cfe0ff;box-shadow:0 2px 4px rgba(22,34,52,.05),0 6px 20px rgba(47,109,240,.10)}
 .rmain{display:block}
 /* 1행: 한글명 (영문태그 · 게시물수) */
-/* 이름 줄은 이 카드의 제목이다. 장식을 더하지 않고 크기·굵기로만 위계를 세운다. */
+/* 이름 줄 — 한글명 / 영문명 알약 / 게시물 수. 색은 영문명 알약에만 쓴다. */
 .tline{
-  display:block;width:100%;text-align:left;padding:0;margin:0 0 5px;
+  display:flex;align-items:baseline;flex-wrap:wrap;gap:0 8px;
+  width:100%;text-align:left;padding:0;margin:0 0 6px;
   font-size:18px;line-height:1.35;color:var(--ink);
 }
 .tline .kr{font-weight:800;letter-spacing:-.2px}
-.tline .paren{color:var(--ink3);font-weight:400;font-size:14px}
 .tline .en{
   font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  font-size:14.5px;font-weight:700;color:var(--accent-ink);letter-spacing:-.3px;
+  font-size:13px;font-weight:700;color:var(--accent-ink);letter-spacing:-.2px;
+  background:var(--accent-weak);border-radius:999px;padding:3px 9px;
 }
-.tline:hover .en{text-decoration:underline}
-.tline .num{font-variant-numeric:tabular-nums;font-size:14px;color:var(--ink2);font-weight:600}
-.tline .flag{font-size:10.5px;font-weight:800;color:var(--ok);margin-left:5px;vertical-align:1px}
-.tline .flag.ren{color:var(--warn)}
+.tline:hover .en{background:#dbe8ff}
+.tline .num{font-variant-numeric:tabular-nums;font-size:13px;color:var(--ink3);font-weight:600}
 /* 2행: 분류 경로 — 전부 같은 스타일, 왼쪽 정렬 */
 .path{
-  font-size:12px;color:var(--ink3);line-height:1.5;margin:0 0 8px;
-  display:flex;flex-wrap:wrap;align-items:baseline;gap:0 2px;
+  font-size:12px;color:var(--ink3);line-height:1.5;margin:0 0 11px;
+  display:flex;flex-wrap:wrap;align-items:baseline;gap:0 5px;
 }
 .path button{font:inherit;color:inherit;padding:1px 0;border-radius:3px}
 .path button:hover{color:var(--accent);text-decoration:underline}
-.path .sep{opacity:.5;padding:0 1px}
+.path .sep{opacity:.45}
 /* 설명 전문 */
 /* 설명은 열 오른쪽 끝까지 닿지 않게 — 읽기 좋은 길이에서 끊는다 */
-/* 설명은 옅은 카드로 묶어 이름·분류 줄과 구분한다. 테두리 하나, 배경 하나로 끝낸다. */
-.dcard{
-  background:#f7f9fc;border:1px solid #eaeff6;border-radius:10px;
-  padding:10px 12px;margin:0 0 9px;max-width:var(--measure);
-}
+/* 설명은 배경 없이 — 흰 카드 안에서 또 상자를 만들지 않는다 */
 .desc{
-  font-size:14px;line-height:1.8;color:var(--ink2);margin:0;
-  word-break:keep-all;overflow-wrap:anywhere;
+  font-size:14px;line-height:1.8;color:var(--ink2);margin:0 0 10px;
+  max-width:var(--measure);word-break:keep-all;overflow-wrap:anywhere;
 }
-.kws{font-size:12px;line-height:1.6;color:var(--ink3);margin:8px 0 0;
-  padding-top:8px;border-top:1px solid #e8edf4}
-.kws b{font-weight:700;color:var(--ink3);opacity:.85}
-.nodesc{font-size:12.5px;color:var(--ink3);opacity:.7;margin:0}
+.kws{display:flex;gap:8px;font-size:12px;line-height:1.6;color:var(--ink2);margin:0 0 12px;
+  max-width:var(--measure)}
+.kws b{flex:0 0 auto;font-weight:600;color:var(--ink3)}
+.nodesc{font-size:12.5px;color:var(--ink3);opacity:.75;margin:0 0 12px}
 .r3{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .act.add.in{background:var(--accent);border-color:var(--accent);color:#fff}
 
 /* related panel */
-.relp{border-top:1px solid var(--line2);background:#fafbfd;padding:9px 11px 11px}
+.relp{
+  background:var(--sub-bg);border:1px solid #e7eef8;border-radius:12px;
+  padding:11px 12px 12px;margin-top:12px;
+}
 .relhead{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-bottom:9px}
 .relhead .cnt{font-size:11px;color:var(--ink3);margin-left:auto;font-variant-numeric:tabular-nums;
   display:inline-flex;align-items:center;gap:5px}
@@ -397,11 +410,12 @@ button{cursor:pointer;background:none;border:none;padding:0}
   border-radius:999px;padding:1px 6px;font-weight:600}
 /* 패널 안 분류 고르기 */
 .relfil{display:flex;flex-wrap:wrap;gap:5px;padding:0 0 9px}
-.relfil .rf{--rfc:var(--ink2);color:var(--rfc);min-height:30px}
-.relfil .rf b{font-weight:700;opacity:.55;font-variant-numeric:tabular-nums}
+.relfil .rf{--rfc:var(--ink2);--rfb:#eef2f7;color:var(--rfc);background:var(--rfb);
+  border-color:transparent;border-radius:999px;min-height:28px;font-size:11.5px}
+.relfil .rf b{font-weight:600;opacity:.6;font-variant-numeric:tabular-nums}
 .relfil .rf:hover{border-color:currentColor}
-.relfil .rf.on{background:var(--rfc);border-color:var(--rfc);color:#fff}
-.relfil .rf.on b{opacity:.8}
+.relfil .rf.on{background:var(--rfc);color:#fff;border-color:var(--rfc)}
+.relfil .rf.on b{opacity:.85}
 .relgrid{display:grid;grid-template-columns:1fr;gap:5px}
 @media (min-width:620px){ .relgrid{grid-template-columns:1fr 1fr} }
 /* 관련 태그 — 분류별 그룹 보기 */
@@ -416,9 +430,10 @@ button{cursor:pointer;background:none;border:none;padding:0}
 .rghead .n{font-size:10.5px;font-weight:600;color:var(--ink3);font-variant-numeric:tabular-nums;flex:0 0 auto}
 .rghead .ln{flex:1 1 auto;height:1px;background:var(--line);min-width:8px}
 .ritem{
-  display:flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--line);
-  border-radius:9px;padding:6px 8px;min-height:46px;
+  display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e9eef6;
+  border-radius:10px;padding:7px 9px;min-height:46px;
 }
+.ritem:hover{border-color:#d4e0f2}
 /* 어느 분류인지 색 점 하나로 (배지를 늘리지 않는다) */
 .rdot{flex:0 0 auto;width:7px;height:7px;border-radius:50%;background:var(--ink3);opacity:.85}
 .rdot.none{background:#cdd6e2}
@@ -428,11 +443,11 @@ button{cursor:pointer;background:none;border:none;padding:0}
 .rtag:hover .rn{color:var(--accent)}
 .rtag .rk{font-size:11px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rstat{flex:0 0 auto;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:1px}
-.rpct{font-size:12px;font-weight:700;color:var(--accent-ink);font-variant-numeric:tabular-nums}
+.rpct{font-size:12.5px;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums}
 .rposts{font-size:10.5px;color:var(--ink3);font-variant-numeric:tabular-nums}
 /* 관련 태그 → 본문 항목으로 이동 */
-.rgo{flex:0 0 auto;min-height:30px;padding:0 9px;justify-content:center;
-  color:var(--accent-ink);background:var(--accent-weak);border-color:#cfe0ff}
+.rgo{flex:0 0 auto;min-height:30px;padding:0 11px;justify-content:center;border-radius:999px;
+  color:var(--accent-ink);background:var(--accent-weak);border-color:transparent;font-weight:700}
 .rgo:hover{background:#e3edff;border-color:var(--accent)}
 .rgo.off{color:var(--ink3);background:var(--ctl-bg);border-color:var(--ctl-bd);
   min-width:34px;cursor:default}
@@ -471,7 +486,7 @@ button{cursor:pointer;background:none;border:none;padding:0}
 .spclose{margin-left:auto;width:26px;height:26px;border-radius:7px;color:var(--ink3);font-size:17px;
   line-height:1;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
 .spclose:hover{background:var(--line2);color:var(--ink)}
-.sidepanel-in .relp{border-top:0;background:var(--card);padding:10px 12px 13px}
+.sidepanel-in .relp{background:var(--card);border:0;border-radius:0;margin-top:0;padding:10px 12px 13px}
 .sidepanel-in .relgrid{grid-template-columns:1fr}
 .sidepanel-in .relbody{max-height:calc(100vh - 250px)}
 .row.exp{background:var(--accent-weak);border-radius:8px}
@@ -564,7 +579,11 @@ footer a:hover{color:var(--ink2)}
 <main class="listcol">
   <div id="relstatus"></div>
   <p class="cathelp" id="cathelp"></p>
-  <div class="statusbar"><div class="count" id="count">—</div></div>
+  <div class="statusbar">
+    <span class="sortlab"><svg viewBox="0 0 24 24"><path d="M7 4v16M7 20l-3-3M7 4l3 3M17 20V4M17 4l3 3M17 20l-3-3"/></svg>정렬</span>
+    <span id="sortslot"></span>
+    <div class="count" id="count">—</div>
+  </div>
   <div id="notice" class="noticewrap"></div>
   <div id="viewport"><div id="spacer"><div id="rows"></div></div></div>
   <div id="empty" class="empty" style="display:none"></div>
@@ -1088,7 +1107,9 @@ function buildUI(){
     measureCPL(); layout(true);
   });
   measureCPL();
+  placeSort();
   measureTopbar();
+  if(wideMQ && wideMQ.addEventListener) wideMQ.addEventListener('change', placeSort);
   window.addEventListener('resize', measureTopbar, {passive:true});
 }
 /* 옆칸(관련 태그)이 상단 바 아래에 붙도록 바 높이를 CSS 변수로 넘긴다 */
@@ -1105,8 +1126,19 @@ function topbarH(){
   return cs.position === 'sticky' ? Math.round(tb.getBoundingClientRect().height) : 0;
 }
 
+/* 좁은 화면에서는 정렬을 상태줄로 내려 고정 바 높이를 아낀다.
+   (네 줄로 접히면 375px 기준 249px = 화면의 34% 였다) */
+var wideMQ = window.matchMedia ? window.matchMedia('(min-width:900px)') : null;
+function placeSort(){
+  var el = $('#sort'), bar = document.querySelector('#topbar .tbin'), slot = $('#sortslot');
+  if(!el || !bar || !slot) return;
+  var wide = wideMQ ? wideMQ.matches : window.innerWidth >= 900;
+  var want = wide ? bar : slot;
+  if(el.parentNode !== want) want.appendChild(el);
+  measureTopbar();
+}
+
 /* ---------- 성인 태그 토글 ---------- */
-/* 조작부가 상단 바 하나로 합쳐져서, 토글도 자리를 옮길 일이 없어졌다. */
 function syncAdultToggle(){
   var t = $('#adTog');
   if(!t) return;
@@ -1728,7 +1760,7 @@ function buildRow(id, pos){
   /* 넓은 화면에서는 패널이 옆칸에 있으므로 행 안에 또 넣으면 안 된다 */
   if(id === expanded){
     d.classList.add('exp');
-    if(!sideMode()) d.insertAdjacentHTML('beforeend', relPanelHTML(id));
+    if(!sideMode()) cardOf(d).insertAdjacentHTML('beforeend', relPanelHTML(id));
   }
   return d;
 }
@@ -1741,10 +1773,10 @@ function rowHTML(i){
   var tip = '게시물 ' + fmt(p5) + '개';
   if(p4 > 0) tip += ' · V4.5(2025-05) ' + fmt(p4) + '개' +
                     (g !== null ? ' · ' + (g >= 0 ? '+' : '') + (g*100).toFixed(1) + '%' : '');
-  var h = '<button class="tline" data-act="copy" title="' + esc(tip) + '">';
-  if(kr) h += '<span class="kr">' + esc(kr) + '</span> ';
-  h += '<span class="paren">(<span class="en">' + esc(name) + '</span> · ' +
-       '<span class="num">' + fmt(p5) + '</span>)</span>';
+  var h = '<div class="rcard"><button class="tline" data-act="copy" title="' + esc(tip) + '">';
+  if(kr) h += '<span class="kr">' + esc(kr) + '</span>';
+  h += '<span class="en">' + esc(name) + '</span>' +
+       '<span class="num">' + fmt(p5) + '</span>';
   if(st === 1) h += '<span class="flag">NEW</span>';
   else if(st === 2) h += '<span class="flag ren">이름변경</span>';
   h += '</button>';
@@ -1752,11 +1784,9 @@ function rowHTML(i){
   h += pathHTML(i, cat);
 
   // 설명 전문
-  h += '<div class="dcard">';
   if(D.d[i]) h += '<p class="desc">' + esc(D.d[i]) + '</p>';
   else h += '<p class="nodesc">위키 설명 없음</p>';
-  if(D.kw[i]) h += '<div class="kws"><b>키워드</b> ' + esc(D.kw[i]) + '</div>';
-  h += '</div>';
+  if(D.kw[i]) h += '<div class="kws"><b>키워드</b><span>' + esc(D.kw[i]) + '</span></div>';
 
   h += '<div class="r3">';
   if(cat === 0) h += '<button class="act relbtn' + (i === expanded ? ' on' : '') + '" data-act="rel"' +
@@ -1765,14 +1795,14 @@ function rowHTML(i){
   h += '<span class="spacerflex"></span>';
   h += '<a class="wikia" href="https://danbooru.donmai.us/wiki_pages/' + encodeURIComponent(name) +
        '" target="_blank" rel="noopener noreferrer">위키' + (D.wk[i] ? '' : '?') + ' ↗</a>';
-  h += '</div>';
+  h += '</div></div>';          /* .r3, .rcard */
   return h;
 }
 
 /* 분류 경로 한 줄 — 배지 없이 전부 같은 스타일, 왼쪽 정렬.
    일반 태그는 대→중→소 3단, 나머지는 소분류가 분류명과 겹치면 생략한다. */
 function pathHTML(i, cat){
-  var tp = D.t[i], sep = '<span class="sep">›</span>';
+  var tp = D.t[i], sep = '<span class="sep">·</span>';
   var h = '<div class="path"><button data-pc="' + cat + '">' + CATNAME[cat] + '</button>';
   if(tp >= 0){
     var sub = subShort(tp);
@@ -1793,11 +1823,11 @@ function pathHTML(i, cat){
 
 function naiRowHTML(k){
   var e = D.nai[k];
-  var h = '<button class="tline" data-act="copy">' +
-          '<span class="kr">' + esc(e[1]) + '</span> ' +
-          '<span class="paren">(<span class="en">' + esc(e[0]) + '</span>)</span></button>';
-  h += '<div class="path"><span>NAI전용</span><span class="sep">\u203a</span><span>' + esc(e[2]) + '</span></div>';
-  h += '<div class="dcard"><p class="nodesc">단부루에는 없고 NovelAI에서만 쓰는 태그라 게시물 수와 위키가 없습니다.</p></div>';
+  var h = '<div class="rcard"><button class="tline" data-act="copy">' +
+          '<span class="kr">' + esc(e[1]) + '</span>' +
+          '<span class="en">' + esc(e[0]) + '</span></button>';
+  h += '<div class="path"><span>NAI전용</span><span class="sep">·</span><span>' + esc(e[2]) + '</span></div>';
+  h += '<p class="nodesc">단부루에는 없고 NovelAI에서만 쓰는 태그라 게시물 수와 위키가 없습니다.</p></div>';
   return h;
 }
 
@@ -1846,7 +1876,7 @@ function relPanelHTML(i){
       var g1 = gorder[go];
       var nm1 = g1 >= 0 ? D.groups[g1] : '미분류';
       h += '<button class="rf' + (relFilter === g1 ? ' on' : '') + '" data-rf="' + g1 + '"' +
-           (g1 >= 0 ? ' style="--rfc:' + gcolor(g1) + '"' : '') + '>' +
+           (g1 >= 0 ? ' style="--rfc:' + gcolor(g1) + ';--rfb:' + gcolor(g1, 'bg') + '"' : '') + '>' +
            esc(nm1) + ' <b>' + gcount[g1] + '</b></button>';
     }
     h += '</div>';
@@ -1995,7 +2025,7 @@ function setInlinePanel(id, pos, rowEl){
     expanded = id; expandedPos = pos;
     rowEl.classList.add('exp');
     var nb = rowEl.querySelector('.relbtn'); if(nb) nb.classList.add('on');
-    rowEl.insertAdjacentHTML('beforeend', relPanelHTML(id));
+    cardOf(rowEl).insertAdjacentHTML('beforeend', relPanelHTML(id));
     measurePanel(rowEl, pos);
   }
 
@@ -2004,6 +2034,7 @@ function setInlinePanel(id, pos, rowEl){
   renderWindow();
 }
 /* 방금 넣은 패널의 실제 높이를 재서 base/panelH 를 확정한다 */
+function cardOf(rowEl){ return rowEl.querySelector('.rcard') || rowEl; }
 function measurePanel(rowEl, pos){
   var pe = rowEl.querySelector('.relp');
   panelH = pe ? pe.offsetHeight : 0;
@@ -2035,7 +2066,7 @@ function reopenPanel(){
   var a = anchorNow();
   var old = el.querySelector('.relp');
   if(old) old.remove();
-  el.insertAdjacentHTML('beforeend', relPanelHTML(expanded));
+  cardOf(el).insertAdjacentHTML('beforeend', relPanelHTML(expanded));
   measurePanel(el, expandedPos);
   compensate(a.pos, a.before);
   lastRange = [-1,-1];
