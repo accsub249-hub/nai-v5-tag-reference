@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light">
-<title>BOORU V5</title>
+<title>[진단] BOORU V5</title>
 <style>
 :root{
   --bg:#f4f6f9; --card:#ffffff; --line:#e2e6ec; --line2:#eef1f5;
@@ -1934,5 +1934,245 @@ boot();
 
 })();
 </script>
+<style>
+#dbg{position:fixed;left:0;right:0;bottom:0;z-index:2000;font:12px/1.35 -apple-system,BlinkMacSystemFont,
+  "Segoe UI","Malgun Gothic","Apple SD Gothic Neo",sans-serif;color:#eaf0f8;
+  background:rgba(14,20,30,.94);backdrop-filter:blur(6px);border-top:1px solid #33415a;
+  padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -3px 16px rgba(0,0,0,.35)}
+#dbg *{box-sizing:border-box}
+#dbgBar{display:flex;align-items:center;gap:6px;padding:7px 8px}
+#dbgMark{flex:1 1 auto;min-height:46px;border:0;border-radius:10px;background:#e0483a;color:#fff;
+  font-size:15px;font-weight:800;letter-spacing:.5px}
+#dbgMark:active{background:#b8382c}
+#dbgMark.hit{background:#2f9e54}
+.dbgb{min-height:46px;padding:0 11px;border:1px solid #3d4c66;border-radius:10px;background:#1d2736;
+  color:#cfe0f5;font-size:12px;font-weight:700;flex:0 0 auto}
+.dbgb:active{background:#2b3a51}
+.dbgb.on{background:#2f6fd8;border-color:#2f6fd8;color:#fff}
+#dbgMore{padding:0 8px 8px}
+#dbgMore[hidden]{display:none}
+#dbgStat{font-variant-numeric:tabular-nums;color:#9fb4d0;padding:2px 2px 7px;white-space:pre-wrap;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px;line-height:1.5}
+#dbgStat b{color:#ffd47a;font-weight:700}
+#dbgStat .warn{color:#ff9b8a}
+.dbgrow{display:flex;gap:6px;flex-wrap:wrap;padding-bottom:7px}
+.dbgopt{flex:1 1 44%;min-height:42px;border:1px solid #3d4c66;border-radius:9px;background:#1d2736;
+  color:#b9cbe2;font-size:11.5px;font-weight:600;text-align:left;padding:5px 9px;line-height:1.25}
+.dbgopt.on{background:#2f6fd8;border-color:#5b93ee;color:#fff}
+.dbgopt i{display:block;font-style:normal;font-size:10px;opacity:.75;font-weight:500}
+#dbgOut{width:100%;height:120px;background:#0a0f17;color:#b9cbe2;border:1px solid #33415a;border-radius:8px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10px;padding:6px}
+#dbgOut[hidden]{display:none}
+</style>
+
+<div id="dbg">
+  <div id="dbgBar">
+    <button id="dbgMark">지금 튀었어요</button>
+    <button class="dbgb" id="dbgToggle">설정</button>
+  </div>
+  <div id="dbgMore" hidden>
+    <div id="dbgStat">준비 중…</div>
+    <div class="dbgrow">
+      <button class="dbgopt" data-opt="A">A. 보정 끄기<i>스크롤 위치를 앱이 건드리지 않음</i></button>
+      <button class="dbgopt" data-opt="B">B. 멈춘 뒤 보정<i>스크롤이 멎고 0.2초 뒤에만</i></button>
+      <button class="dbgopt" data-opt="C">C. 소수점 높이<i>정수 반올림 대신 실수로 측정</i></button>
+      <button class="dbgopt" data-opt="D">D. 뷰포트 고정<i>주소창 변화 무시</i></button>
+    </div>
+    <div class="dbgrow">
+      <button class="dbgb" id="dbgCopy" style="flex:1 1 auto">기록 복사</button>
+      <button class="dbgb" id="dbgShow">보기</button>
+      <button class="dbgb" id="dbgClear">지우기</button>
+    </div>
+    <textarea id="dbgOut" readonly hidden></textarea>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var opt = { A:false, B:false, C:false, D:false };
+var SAMPLES = 6000, EVENTS = 3000;
+var samp = [], ev = [], marks = [];
+var t0 = Date.now();
+var now = function(){ return Date.now() - t0; };
+var comps = 0, compSum = 0, compMax = 0, compDuringTouch = 0, compDuringMomentum = 0;
+var lastTouch = -1e9, touching = false;
+var vv = window.visualViewport || null;
+var dbg = {
+  opt: opt,
+  vvH: vv ? vv.height : window.innerHeight,
+  comp: function(delta, anchor, mode){
+    comps++; compSum += Math.abs(delta); compMax = Math.max(compMax, Math.abs(delta));
+    var inTouch = touching, inMo = !touching && (now() - lastTouch) < 900;
+    if(inTouch) compDuringTouch++;
+    if(inMo) compDuringMomentum++;
+    push(ev, { t: now(), k: 'COMP', d: Math.round(delta * 10) / 10, a: anchor, m: mode,
+               y: Math.round(window.scrollY), ph: inTouch ? 'touch' : (inMo ? 'momentum' : 'idle') });
+  },
+  meas: function(list){
+    var above = list.filter(function(x){ return x.rel === 'ABOVE'; });
+    push(ev, { t: now(), k: 'MEAS', n: list.length, above: above.length,
+               d: list.slice(0, 4).map(function(x){
+                    return x.p + ':' + x.from + '→' + x.to + (x.fresh ? '*' : '') + '/' + x.rel; }) });
+  },
+  render: function(r){
+    push(ev, { t: now(), k: 'RND', y: Math.round(r.y), a: r.anchor, f: r.first, l: r.last,
+               b: r.built, dr: r.dropped, ih: r.ih, ph: r.panelH, ep: r.expPos });
+  }
+};
+function push(arr, o){ arr.push(o); if(arr.length > (arr === samp ? SAMPLES : EVENTS)) arr.shift(); }
+
+/* ---- 앱에 붙기 ---- */
+var attached = false;
+(function tryAttach(n){
+  if(window.__NAI5_ATTACH_DBG){ window.__NAI5_ATTACH_DBG(dbg); attached = true; return; }
+  if(n < 100) setTimeout(function(){ tryAttach(n + 1); }, 100);
+})(0);
+
+/* ---- 표본 수집 ---- */
+var lastY = window.scrollY, maxStep = 0, jumpAuto = 0;
+function sample(kind){
+  var y = window.scrollY;
+  var d = y - lastY;
+  if(Math.abs(d) > maxStep) maxStep = Math.abs(d);
+  push(samp, { t: now(), y: Math.round(y), d: Math.round(d),
+               ih: window.innerHeight, vh: vv ? Math.round(vv.height) : 0,
+               vo: vv ? Math.round(vv.offsetTop) : 0, k: kind });
+  lastY = y;
+}
+window.addEventListener('scroll', function(){ sample('s'); }, { passive: true });
+window.addEventListener('touchstart', function(e){
+  touching = true; lastTouch = now();
+  push(ev, { t: now(), k: 'TSTART', y: Math.round(window.scrollY),
+             tgt: (e.target && e.target.closest && e.target.closest('.relbody')) ? 'PANEL' : 'page' });
+}, { passive: true });
+window.addEventListener('touchmove', function(){ lastTouch = now(); }, { passive: true });
+window.addEventListener('touchend', function(){
+  touching = false; lastTouch = now();
+  push(ev, { t: now(), k: 'TEND', y: Math.round(window.scrollY) });
+}, { passive: true });
+if(vv){
+  vv.addEventListener('resize', function(){
+    dbg.vvH = vv.height;
+    push(ev, { t: now(), k: 'VVRESIZE', h: Math.round(vv.height), ih: window.innerHeight,
+               y: Math.round(window.scrollY) });
+  });
+  vv.addEventListener('scroll', function(){
+    push(ev, { t: now(), k: 'VVSCROLL', ot: Math.round(vv.offsetTop), y: Math.round(window.scrollY) });
+  });
+}
+window.addEventListener('resize', function(){
+  push(ev, { t: now(), k: 'RESIZE', ih: window.innerHeight, iw: window.innerWidth });
+});
+(function loop(){ sample('f'); requestAnimationFrame(loop); })();
+
+/* ---- 화면 ---- */
+var $ = function(s){ return document.querySelector(s); };
+var stat = $('#dbgStat');
+function fmtStat(){
+  var y = Math.round(window.scrollY);
+  var A = window.__NAI5;
+  var on = Object.keys(opt).filter(function(k){ return opt[k]; }).join('') || '없음';
+  stat.innerHTML =
+    'scrollY ' + y + '   innerHeight ' + window.innerHeight +
+    (vv ? '\nvisualViewport ' + Math.round(vv.height) + '  offsetTop ' + Math.round(vv.offsetTop) : '') +
+    '\n보정 <b>' + comps + '회</b>  합계 ' + Math.round(compSum) + 'px  최대 ' + Math.round(compMax) + 'px' +
+    '\n  └ 터치 중 <span class="' + (compDuringTouch ? 'warn' : '') + '">' + compDuringTouch +
+    '</span>  관성 중 <span class="' + (compDuringMomentum ? 'warn' : '') + '">' + compDuringMomentum + '</span>' +
+    '\n튐 표시 <b>' + marks.length + '회</b>   켠 옵션 ' + on +
+    '\n패널 ' + (A && A.expanded >= 0 ? '펼침(높이 ' + Math.round(A.panelH) + ')' : '접힘') +
+    '   앱연결 ' + (attached ? 'OK' : '대기');
+}
+setInterval(fmtStat, 400);
+
+$('#dbgToggle').addEventListener('click', function(){
+  var m = $('#dbgMore'); m.hidden = !m.hidden; this.classList.toggle('on', !m.hidden);
+});
+var markBtn = $('#dbgMark');
+markBtn.addEventListener('click', function(){
+  marks.push({ t: now(), y: Math.round(window.scrollY), si: samp.length, ei: ev.length });
+  markBtn.classList.add('hit'); markBtn.textContent = '기록됨 (' + marks.length + ')';
+  setTimeout(function(){ markBtn.classList.remove('hit'); markBtn.textContent = '지금 튀었어요'; }, 700);
+  if(navigator.vibrate) try{ navigator.vibrate(40); }catch(e){}
+});
+[].forEach.call(document.querySelectorAll('.dbgopt'), function(b){
+  b.addEventListener('click', function(){
+    var k = b.dataset.opt;
+    opt[k] = !opt[k];
+    b.classList.toggle('on', opt[k]);
+    push(ev, { t: now(), k: 'OPT', o: k, v: opt[k] });
+  });
+});
+$('#dbgClear').addEventListener('click', function(){
+  samp.length = 0; ev.length = 0; marks.length = 0;
+  comps = compSum = compMax = compDuringTouch = compDuringMomentum = 0;
+  maxStep = 0; t0 = Date.now();
+  $('#dbgOut').hidden = true;
+});
+
+function report(){
+  var L = [];
+  L.push('== BOORU V5 스크롤 진단 ==');
+  L.push('UA ' + navigator.userAgent);
+  L.push('화면 ' + screen.width + 'x' + screen.height + ' dpr ' + (window.devicePixelRatio || 1) +
+         ' / 뷰포트 ' + window.innerWidth + 'x' + window.innerHeight +
+         (vv ? ' / vv ' + Math.round(vv.width) + 'x' + Math.round(vv.height) : ' / vv 없음'));
+  L.push('옵션 ' + JSON.stringify(opt) + '  앱연결 ' + attached);
+  var A = window.__NAI5;
+  if(A) L.push('태그 ' + (A.results ? A.results.length : '?') + ' / 2단계 ' +
+               A.stage2Done + '/' + A.stage2Total + ' / 패널 ' +
+               (A.expanded >= 0 ? '펼침 h=' + Math.round(A.panelH) : '접힘'));
+  L.push('보정 ' + comps + '회 합계 ' + Math.round(compSum) + ' 최대 ' + Math.round(compMax) +
+         ' (터치중 ' + compDuringTouch + ', 관성중 ' + compDuringMomentum + ')');
+  L.push('프레임당 최대 스크롤 이동 ' + Math.round(maxStep) + 'px');
+  L.push('튐 표시 ' + marks.length + '회');
+
+  var ihSet = {}, vhSet = {};
+  for(var i = 0; i < samp.length; i++){ ihSet[samp[i].ih] = 1; if(samp[i].vh) vhSet[samp[i].vh] = 1; }
+  L.push('관측된 innerHeight 값: ' + Object.keys(ihSet).join(',') +
+         '  visualViewport 높이: ' + (Object.keys(vhSet).join(',') || '-'));
+
+  marks.forEach(function(m, idx){
+    L.push('');
+    L.push('---- 튐 #' + (idx + 1) + '  t=' + m.t + 'ms  scrollY=' + m.y + ' ----');
+    var from = m.t - 2500, to = m.t + 400;
+    var s = samp.filter(function(x){ return x.t >= from && x.t <= to; });
+    var e = ev.filter(function(x){ return x.t >= from && x.t <= to; });
+    L.push('[이벤트]');
+    e.slice(-45).forEach(function(x){ L.push('  ' + JSON.stringify(x)); });
+    L.push('[스크롤 표본 t,y,Δ,ih,vh]');
+    var step = Math.max(1, Math.ceil(s.length / 70));
+    for(var i = 0; i < s.length; i += step){
+      var x = s[i];
+      L.push('  ' + x.t + ',' + x.y + ',' + x.d + ',' + x.ih + ',' + x.vh);
+    }
+  });
+  if(!marks.length){
+    L.push('');
+    L.push('---- 최근 이벤트 40개 ----');
+    ev.slice(-40).forEach(function(x){ L.push('  ' + JSON.stringify(x)); });
+  }
+  return L.join('\n');
+}
+$('#dbgShow').addEventListener('click', function(){
+  var o = $('#dbgOut'); o.value = report(); o.hidden = !o.hidden;
+});
+$('#dbgCopy').addEventListener('click', function(){
+  var txt = report();
+  var done = function(){ var b = $('#dbgCopy'); b.textContent = '복사됨!'; b.classList.add('on');
+    setTimeout(function(){ b.textContent = '기록 복사'; b.classList.remove('on'); }, 1400); };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done, function(){ fallback(txt, done); });
+  } else fallback(txt, done);
+  function fallback(t, cb){
+    var o = $('#dbgOut'); o.hidden = false; o.value = t; o.focus(); o.select();
+    try{ document.execCommand('copy'); cb(); }catch(e){}
+  }
+});
+/* 진단 바가 목록을 가리지 않게 */
+document.body.style.paddingBottom = '92px';
+})();
+</script>
+
 </body>
 </html>
